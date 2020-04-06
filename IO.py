@@ -1,17 +1,9 @@
-#! usr/bin/env python3
+#! /usr/bin/env python3
 # IO.py
 
-
-import re
-import copy
-
 from config import *
-import fundfunc
-import move
-import csjudge
 
-
-def TypeChange(target):
+def ToggleType(target):
     # piece ID -> piece letter
     if type(target) is int:
         if target == EMPTY:
@@ -41,7 +33,8 @@ def TypeChange(target):
         elif target == K * BLACK:
             return '♚'
         else:
-            logging.critical('UNEXPECTED INPUT VALUE of A PIECE into TypeChange')
+            logging.error(
+                'UNEXPECTED INPUT VALUE of A PIECE into IO.ToggleType')
             return False
 
     # str, chr -> int
@@ -66,180 +59,13 @@ def TypeChange(target):
         elif ord('a') <= ord(target) <= ord('h'):
             return ord(target) - ord('a') + 1
         else:
-            logging.critical('UNEXPECTED INPUT into TypeChange')
+            logging.error('UNEXPECTED INPUT into IO.ToggleType')
             return False
 
     # unexpected type
     else:
-        logging.critical('UNEXPECTED INPUT TYPE into TypeChange')
+        logging.error('UNEXPECTED INPUT TYPE into IO.ToggleType')
         return False
-
-
-def BoardPrint(board=main_board):
-    print('\n')
-    print('\t    a   b   c   d   e   f   g   h')
-    print('\t   -------------------------------')
-    for row in range(SIZE - 1, -1, -1):
-        print('\t{} |'.format(row + 1), end='')
-        for col in range(SIZE):
-            print(' {} |'.format(TypeChange(board[col][row])), end='')
-        print(' {}'.format(row + 1))
-        print('\t   -------------------------------')
-    print('\t    a   b   c   d   e   f   g   h')
-    print('\n')
-    
-
-def s_analyze(s, player, board=main_board):
-    # avoiding bugs
-    if len(s) == 0:
-        return False
-
-    # deleting all of !?+-= at the tail
-    while s[-1] in ['!', '?', '+', '-', '=']:
-        del s[-1]
-
-    # avoiding bugs
-    if len(s) == 0:
-        return False
-
-    # matching the normal format
-    match = re.match(r'^[PRNBQK]?[a-h]?[1-8]?[x]?[a-h][1-8](=[RNBQ]|e.p.)?[\+#]?$', s)
-    
-    if match:
-        line = match.group()
-        logging.info('line = {}'.format(line))
-
-        # what piece is moving
-        if line[0] in ['R', 'N', 'B', 'Q', 'K']:
-            piece = TypeChange(line[0])
-            line = line.lstrip(line[0])
-        else:
-            piece = PAWN
-            
-        # written info of what row the piece comes from
-        if line[0].isdecimal():
-            frCOL = OVERSIZE
-            frROW = TypeChange(line[0]) - 1
-            line = line.lstrip(line[0])
-        # written info of what col the piecce comes from
-        elif ord('a') <= ord(line[0]) <= ord('h') and ord('a') <= ord(line[1]) <= ord('x'):
-            frCOL = TypeChange(line[0]) - 1
-            frROW = OVERSIZE
-            line = line.lstrip(line[0])
-        # nothing is written about where the piece comes from
-        else:
-            frCOL = OVERSIZE
-            frROW = OVERSIZE
-
-        # whether the piece has captured one of the opponent's pieces
-        if line[0] == 'x':
-            CAPTURED = True
-            line = line.lstrip(line[0])
-        else:
-            CAPTURED = False
-
-        # where the piece goes to
-        toCOL = TypeChange(line[0]) - 1
-        toROW = TypeChange(line[1]) - 1
-
-        # promotion
-        if '=' in line:
-            promote = line[line.index('=') + 1]
-        else:
-            promote = EMPTY
-        
-        # raising up all the available candidates
-        candidates = []
-        for col in range(SIZE):
-            # when frCOL is written
-            if fundfunc.InBoard(frCOL) and frCOL != col:
-                continue
-            
-            for row in range(SIZE):
-                # when frROW is written
-                if fundfunc.InBoard(frROW) and frROW != row:
-                    continue
-                
-                # piece
-                if board[col][row] != player * piece:
-                    continue
-
-                # available motion
-                if move.motionjudge(col, row, toCOL, toROW, promote) == False:
-                    continue
-
-                candidates.append([col, row])
-                
-        # checking all the candidates
-        for reference in range(len(candidates)):
-            local_board = copy.deepcopy(board)
-            move.move(candidates[reference][COL], candidates[reference][ROW], toCOL, toROW, promote, local_board)
-                        
-            # capture; searching for the opponent's piece that has disappeared
-            if CAPTURED or 'e.p.' in line:
-                for col in range(SIZE):
-                    for row in range(SIZE):
-                        if fundfunc.PosNeg(board[col][row]) == -player and fundfunc.PosNeg(local_board[col][row]) != -player:
-                            break
-                    else:
-                        continue
-                    break
-                else:
-                    # it does not capture any piece
-                    del candidates[reference]
-                    reference -= 1
-                    continue
-
-            # check
-            if line.count('+') > csjudge.checkcounter(player, local_board):
-                del candidates[reference]
-                reference -= 1
-                continue
-
-            # checkmate
-            if '#' in line and csjudge.checkmatejudge(player, local_board) == False:
-                del candidates[reference]
-                reference -= 1
-                continue
-
-            # en passant
-            if 'e.p.' in line and board[toCOL][toROW] != EMPTY:
-                del candidates[reference]
-                reference -= 1
-                continue
-
-        # return
-        if len(candidates) == 1:
-            return [candidates[0][COL], candidates[0][ROW], toCOL, toROW, promote]
-        elif len(candidates) > 1:
-            logging.warning('THERE IS ANOTHER MOVE')
-            return [candidates[0][COL], candidates[0][ROW], toCOL, toROW, promote]
-        else:
-            logging.info('THERE IS NO MOVE')
-            return False
-
-    # in case the format does not match
-    else:
-        # check whether it represents castling
-        if player == WHITE:
-            row = 1 - 1
-        elif player == BLACK:
-            row = 8 - 1
-        else:
-            logging.critical('UNEXPECTED PLAYER VALUE in s_analyze')
-            return False
-
-        # Q-side
-        if s in ['O-O-O', 'o-o-o', '0-0-0'] and board[e - 1][row] == player * KING:
-            logging.info('format is {}'.format(s))
-            return [e - 1, row, c - 1, row, EMPTY]
-        # K-side
-        elif s in ['O-O', 'o-o', '0-0'] and board[e - 1][row] == player * KING:
-            logging.info('format is {}'.format(s))
-            return [e - 1, row, g - 1, row, EMPTY]
-        else:
-            logging.debug('INVALID FORMAT')
-            return False
 
 
 def instruction():
@@ -336,4 +162,3 @@ def instruction():
     Read the whole passage and press enter to next
     ''')
     input()
-
