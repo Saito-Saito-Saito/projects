@@ -76,7 +76,10 @@ while True:
         IO.instruction()
         continue
     # format check
-    s_record = s
+    s_record = s.replace('o', 'O')
+    # recording castling (1 - 0 has to be saved)
+    if s_record.count('0') >= 2:
+        s_record = s_record.replace('0', 'O')
     motion = main_board.s_analyze(s, player)
     # invalid input
     if motion == False or main_board.move(*motion) == False:
