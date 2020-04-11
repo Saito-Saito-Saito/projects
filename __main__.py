@@ -9,63 +9,57 @@ import board
 import IO
 
 
-# file preparation
-record = open('.\\record.txt', 'w')
-
-# for recording
-turn = 0
-
+# new file preparation
+record = open(MAINRECADDRESS, 'w')
+record.close()
+record = open(SUBRECADDRESS, 'w')
+record.close()
 
 main_board = board.Board()
-player = WHITE
 main_board.BOARDprint()
 
 while True:
     ### GAME SET JUDGE
-    if main_board.king_place(player) == False:
-        winner = -player
+    if main_board.king_place(main_board.player) == False:
+        winner = -main_board.player
         break
-    if main_board.checkmatejudge(player):
+    if main_board.checkmatejudge(main_board.player):
         print('CHECKMATE')
-        winner = -player
+        winner = -main_board.player
         # break
-    if main_board.stalematejudge(player):
+    if main_board.stalematejudge(main_board.player):
         print('STALEMATE')
         winner = EMPTY
         break
 
     ### INPUT
-    if player == WHITE:
-        print('WHITE (X to givw up / H to help) >>> ', end='')
-    elif player == BLACK:
-        print('BLACK (X to givw up / H to help) >>> ', end='')
+    if main_board.player == WHITE:
+        print('WHITE (X to givw up / H to help / Z to back) >>> ', end='')
+    elif main_board.player == BLACK:
+        print('BLACK (X to givw up / H to help / Z to back) >>> ', end='')
     else:
         logging.error('UNEXPECTED VALUE of PLAYER in while loop')
         print('SYSTEM ERROR')
-        record.write('SYSTEM ERROR')
-        winner = EMPTY
-        break
+        sys.exit()
     s = input()
     
     ### INPUT ANALYSIS
     # deleting all spaces
     s = s.replace(' ', '')
     # give up
-    if s in ['X', 'x'] or (player == WHITE and s == '0-1') or (player == BLACK and s == '1-0'):
-        winner = -player
+    if s in ['X', 'x'] or (main_board.player == WHITE and s == '0-1') or (main_board.player == BLACK and s == '1-0'):
+        winner = -main_board.player
         break
     # draw
     if s == '1/2-1/2':
-        if player == WHITE:
+        if main_board.player == WHITE:
             print('BLACK: Do you agree (y/n)? >>> ', end='')
-        elif player == BLACK:
+        elif main_board.player == BLACK:
             print('WHITE: Do you agree (y/n)? >>> ', end='')
         else:
             logging.error('UNEXPECTED VALUE of PLAYER in while loop')
             print('SYSTEM ERROR')
-            record.write('SYSTEM ERROR')
-            winner = EMPTY
-            break
+            sys.exit()
         if input() in ['Y', 'y']:
             winner = EMPTY
             break
@@ -75,94 +69,64 @@ while True:
     if s in ['H', 'h']:
         IO.instruction()
         continue
+    # back
+    if s in ['Z', 'z']:
+        if main_board.player == WHITE:
+            print('Do you agree, BLACK (y/n)? >>> ', end='')
+        elif main_board.player == BLACK:
+            print('Do you agree, WHITE (y/n) >>> ', end='')
+        else:
+            logging.error('UNEXPECTED VALUE of PLAYER in the while loop')
+            sys.exit()
+        if input() not in ['y', 'Y']:
+            continue
+        new_board = main_board.tracefile(main_board.turn - 1, main_board.player)
+        if new_board == main_board:
+            logging.warning('IMPOSSIBLE TO BACK')
+            print('SORRY, NOW WE CANNOT BACK THE BOARD')
+        else:
+            main_board = new_board
+            main_board.BOARDprint()
+        continue
     # format check
     s_record = s.replace('o', 'O')
-    # recording castling (1 - 0 has to be saved)
-    if s_record.count('0') >= 2:
-        s_record = s_record.replace('0', 'O')
-    motion = main_board.s_analyze(s, player)
+    # motion detection
+    motion = main_board.s_analyze(s)
     # invalid input
     if motion == False or main_board.move(*motion) == False:
         print('INVALID INPUT/MOTION')
         continue
 
-    ### PARAMETERS CONTROL
-    piece = abs(main_board.board[motion[2]][motion[3]])
-    # for e.p.
-    if piece == PAWN and abs(motion[3] - motion[1]) > 1:
-        main_board.ep_target = [motion[2], motion[3]]
-    else:
-        main_board.ep_target = [OVERSIZE, OVERSIZE]
-    # for castling q-side
-    if player in main_board.castl_q and (piece == KING or (piece == ROOK and motion[0] == a - 1)):
-        main_board.castl_q.remove(player)
-    # for castling k-side
-    if player in main_board.castl_k and (piece == KING or (piece == ROOK and motion[0] == h - 1)):
-        main_board.castl_k.remove(player)
-
-
-    logging.info('ep = {}'.format(main_board.ep_target))
-        
-
+    # board output
     main_board.BOARDprint()
 
     # recording the move
-    if player == WHITE:
-        record.write('{}\t'.format(turn + 1))
-    elif player == BLACK:
-        pass
-    else:
-        logging.error('UNEXPECTED VALUE of PLAYER in while loop')
-        print('\tSYSTEM ERROR')
-        record.write('SYSTEM ERROR')
-        winner = EMPTY
-        break
-
-    record.write(s_record.ljust(12))
-    if player == WHITE:
-        pass
-    elif player == BLACK:
-        record.write('\n')
-    else:
-        record.write('SYSTEM ERROR')
-        logging.error('UNEXPECTED VALUE of PLAYER in while loop')
-        winner = EMPTY
-        break
-
-    # turn count
-    if player == BLACK:
-        turn += 1
+    main_board.record(s_record, MAINRECADDRESS)
     
-    # player change
-    player *= -1
     
 
 print('\nGAME SET')
 if winner == EMPTY:
+    # for record
+    main_board.player *= -1
     print('1/2 - 1/2\tDRAW')
-    if player == WHITE:
-        record.write('{}\t1/2-1/2'.format(turn + 1))
-    else:
-        record.write('1/2-1/2')
+    main_board.record('1/2-1/2', MAINRECADDRESS)
 elif winner == WHITE:
     print('1 - 0\tWHITE WINS')
-    record.write('1-0')
+    main_board.record('1-0', MAINRECADDRESS) # after white's move, 1-0 is written where black's move is written
 elif winner == BLACK:
     print('0 - 1\tBLACK WINS')
-    record.write('{}\t0-1'.format(turn + 1))
+    main_board.record('0-1', MAINRECADDRESS) # after white's move, 1-0 is written where black's move is written
 else:
     logging.error('UNEXOECTED VALUE of PLAYER out of the loop')
-    record.write('SYSTEM ERROR')
     print('SYSTEM ERROR')
-
-
-record.close()
+    sys.exit()
 
 
 # record output
 print('\nDo you want the record (y/n)? >>> ', end='')
 if input() in ['y', 'Y']:
-    record = open('.\\record.txt', 'r')
+    record = open(MAINRECADDRESS, 'r')
     print('\n------------------------------------')
     print(record.read())
     print('------------------------------------')

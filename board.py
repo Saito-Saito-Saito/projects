@@ -3,6 +3,7 @@
 
 import re
 import copy
+import sys
 
 from config import *
 import fundam
@@ -10,7 +11,7 @@ import IO
 
 
 class Board:    
-    def __init__(self, input_board=[], input_taget=[], input_k=[], input_q=[]):
+    def __init__(self, input_board=[], input_taget=[OVERSIZE, OVERSIZE], input_k=[WHITE, BLACK], input_q=[WHITE, BLACK], input_player=WHITE):
         if len(input_board) == 8:
             self.board = copy.deepcopy(input_board)
         else:
@@ -24,10 +25,12 @@ class Board:
                 [N, P, 0, 0, 0, 0, -P, -N],
                 [R, P, 0, 0, 0, 0, -P, -R]
             ]
-        self.ep_target = [OVERSIZE, OVERSIZE]
-        self.castl_k = [WHITE, BLACK]
-        self.castl_q = [WHITE, BLACK]
-
+        self.ep_target = input_taget
+        self.castl_k = input_k
+        self.castl_q = input_q
+        self.turn = 1
+        self.player = input_player
+                
 
     def BOARDprint(self):
         print('\n')
@@ -131,7 +134,8 @@ class Board:
                 row = 8 - 1
             else:
                 logging.error('UNEXPECTED PLAYER VALUE in motionjudge')
-                return False
+                print('SYSTEM ERROR')
+                sys.exit()
             # Q-side
             if player in self.castl_q and frCOL == e - 1 and frROW == row and toCOL == c - 1 and toROW == row and self.board[b - 1][row] == self.board[c - 1][row] == self.board[d - 1][row] == EMPTY:
                 logging.debug('KING Q-side')
@@ -147,7 +151,8 @@ class Board:
         # other piece values
         else:
             logging.error('UNEXPECTED VALUE of PIECE in motionjudge')
-            return False
+            print('SYSTEM ERROR')
+            sys.exit()
 
         # whether there is an obstacle in the wauy of R/B/Q
         direction = [fundam.PosNeg(toCOL - frCOL), fundam.PosNeg(toROW - frROW)]
@@ -165,54 +170,71 @@ class Board:
 
     
     def move(self, frCOL, frROW, toCOL, toROW, promote=EMPTY):
-        # invalid motion
+        ### INVALID MOTON
         if self.motionjudge(frCOL, frROW, toCOL, toROW, promote) == False:
             return False
         
         piece = abs(self.board[frCOL][frROW])
-        player = fundam.PosNeg(self.board[frCOL][frROW])
 
+        ### SPECIAL EVENTS
         # castling
         if piece == KING and abs(toCOL - frCOL) > 1:
-            if player == WHITE:
+            if self.player == WHITE:
                 row = 1 - 1
-            elif player == BLACK:
+            elif self.player == BLACK:
                 row = 8 - 1
             else:
                 logging.error('UNEXPECTED VALUE of PLAYER in move')
-                return False
+                print('SYSTEM ERROR')
+                sys.exit()
             # moving rook
             if toCOL == c - 1:
-                self.board[d - 1][row] = player * ROOK
+                self.board[d - 1][row] = self.player * ROOK
                 self.board[a - 1][row] = EMPTY
             elif toCOL == g - 1:
-                self.board[f - 1][row] = player * ROOK
+                self.board[f - 1][row] = self.player * ROOK
                 self.board[h - 1][row] = EMPTY
             else:
                 logging.error('UNEXPECTED VALUE of toCOL in move')
                 return False
-
         # en passant
         if piece == PAWN and frCOL != toCOL and self.board[toCOL][toROW] == EMPTY:
             # capturing opponent's pawn
-            self.board[toCOL][frROW] = EMPTY
-        
+            self.board[toCOL][frROW] = EMPTY        
         # promotion
         if piece == PAWN and (toROW == 8 - 1 or toROW == 1 - 1):
-            self.board[frCOL][frROW] = player * promote
-        
+            self.board[frCOL][frROW] = self.player * promote
         # moving own piece
         self.board[toCOL][toROW] = self.board[frCOL][frROW]
         self.board[frCOL][frROW] = EMPTY
-        # return as succeeded
+        
+        ### PARAMETERS CONTROL
+        # for e.p.
+        if piece == PAWN and abs(toROW - frROW) > 1:
+            self.ep_target = [toCOL, toROW]
+        else:
+            self.ep_target = [OVERSIZE, OVERSIZE]
+        # for castling q-side
+        if self.player in self.castl_q and (piece == KING or (piece == ROOK and frCOL == a - 1)):
+            self.castl_q.remove(self.player)
+        # for castling k-side
+        if self.player in self.castl_k and (piece == KING or (piece == ROOK and frCOL == h - 1)):
+            self.castl_k.remove(self.player)
+        # turn count
+        if self.player == BLACK:
+            self.turn += 1
+        # player change
+        self.player *= -1
+        
+        ### RETURN AS SUCCEEDED
         return True
 
 
-    def king_place(self, player):
+    def king_place(self, searcher):
         # searching for the checkee's king
         for col in range(SIZE):
-            if player * KING in self.board[col]:
-                return [col, self.board[col].index(player * KING)]
+            if searcher * KING in self.board[col]:
+                return [col, self.board[col].index(searcher * KING)]
         else:
             # there is no king
             return EMPTY
@@ -251,7 +273,7 @@ class Board:
                     for toCOL in range(SIZE):
                         for toROW in range(SIZE):
                             # cloning board
-                            local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q)
+                            local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player)
                             if local_board.move(frCOL, frROW, toCOL, toROW, Q) and local_board.checkcounter(matee) == 0:
                                 logging.info('THERE IS {}, {} -> {}, {}'.format(frCOL,frROW,toCOL,toROW))
                                 return False
@@ -285,15 +307,20 @@ class Board:
         return True
     
 
-    def s_analyze(self, s, player):
+    def s_analyze(self, s):
         # avoiding bugs
         if len(s) == 0:
             logging.debug('len(s) == 0')
             return False
 
-        # deleting all of !?+-= at the tail
+        # deleting all of !? at the tail
         while s[-1] in ['!', '?']:
             s = s.rstrip(s[-1])
+            if len(s) == 0:
+                return False
+
+        # deleting all of SPACE
+        s = s.replace(' ', '')
 
         # avoiding bugs
         if len(s) == 0:
@@ -362,7 +389,7 @@ class Board:
                         continue
 
                     # piece
-                    if self.board[col][row] != player * piece:
+                    if self.board[col][row] != self.player * piece:
                         continue
 
                     # available motion
@@ -374,34 +401,31 @@ class Board:
 
             # checking all the candidates
             for reference in range(len(candidates)):
-                local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q)
+                local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player)
                 local_board.move(candidates[reference][COL], candidates[reference][ROW], toCOL, toROW, promote)
 
                 # capture; searching for the opponent's piece that has disappeared
                 if CAPTURED or 'e.p.' in line:
-                    for col in range(SIZE):
-                        for row in range(SIZE):
-                            if fundam.PosNeg(self.board[col][row]) == -player and fundam.PosNeg(local_board.board[col][row]) != -player:
-                                break
-                        else:
-                            continue
+                    if fundam.PosNeg(self.board[toCOL][toROW]) == -self.player:
                         break
-                    else:
-                        # it does not capture any piece
-                        logging.info('{} does not capture cany piece'.format(candidates[reference]))
-                        del candidates[reference]
-                        reference -= 1
-                        continue
-
+                    if fundam.InSize(toROW - 1) and fundam.PosNeg(self.board[toCOL][toROW - 1]) == -self.player and fundam.PosNeg(local_board.board[toCOL][toROW - 1]) == EMPTY:
+                        break
+                    if fundam.InSize(toROW + 1) and fundam.PosNeg(self.board[toCOL][toROW + 1]) == -self.player and fundam.PosNeg(local_board.board[toCOL][toROW + 1]) == EMPTY:
+                        break
+                    # here no piece can capture a piece
+                    logging.info('{} does not capture any piece'.format(candidates[reference]))
+                    del candidates[reference]
+                    reference -= 1
+                    continue
                 # check
-                if line.count('+') > local_board.checkcounter(-player):
+                if line.count('+') > local_board.checkcounter(-self.player):
                     logging.info('{} is short of the number of check'.format(candidates[reference]))
                     del candidates[reference]
                     reference -= 1
                     continue
 
                 # checkmate
-                if '#' in line and local_board.checkmatejudge(-player) == False:
+                if '#' in line and local_board.checkmatejudge(-self.player) == False:
                     logging.info('{} does not checkmate'.format(candidates[reference]))
                     del candidates[reference]
                     reference -= 1
@@ -428,23 +452,125 @@ class Board:
         # in case the format does not match
         else:
             # check whether it represents castling
-            if player == WHITE:
+            if self.player == WHITE:
                 row = 1 - 1
-            elif player == BLACK:
+            elif self.player == BLACK:
                 row = 8 - 1
             else:
                 logging.error('UNEXPECTED PLAYER VALUE in s_analyze')
-                return False
+                print('SYSTEM ERROR')
+                sys.exit()
 
             # Q-side
-            if s in ['O-O-O', 'o-o-o', '0-0-0'] and self.board[e - 1][row] == player * KING:
+            if s in ['O-O-O', 'o-o-o', '0-0-0'] and self.board[e - 1][row] == self.player * KING:
                 logging.info('format is {}, castl is {}'.format(s, self.castl_q))
                 return [e - 1, row, c - 1, row, EMPTY]
             # K-side
-            elif s in ['O-O', 'o-o', '0-0'] and self.board[e - 1][row] == player * KING:
+            elif s in ['O-O', 'o-o', '0-0'] and self.board[e - 1][row] == self.player * KING:
                 logging.info('format is {}, castl is {}'.format(s, self.castl_k))
                 return [e - 1, row, g - 1, row, EMPTY]
             else:
                 logging.debug('INVALID FORMAT')
                 return False
+
+
+    def record(self, s, address):
+        # avoding bugs
+        if len(s) == 0:
+            logging.debug('len(s) in record is 0')
+            return False
+
+        # deleting !? at the end
+        while s[-1] in ['!', '?']:
+            del s[-1]
+            if len(s) == 0:
+                logging.debug('len(s) in record is 0')
+                return False
+
+        # deleting all spaces
+        s = s.replace(' ', '')
+
+        # avoiding bugs
+        if len(s) == 0:
+            logging.debug('len(s) in record is 0')
+            return False
+
+        # normal
+        match = re.match(r'^[PRNBQK]?[a-h]?[1-8]?[x]?[a-h][1-8](=[RNBQ]|e.p.)?[\+#]?$', s)
+        if match:
+            s_record = match.group()
+        # give up
+        elif s in ['1-0', '0-1', '1/2-1/2']:
+            s_record = s
+        # castling
+        elif s in ['O-O-O', 'O-O']:
+            s_record = s.replace('o', 'O').replace('0', 'O')
+        else:
+            logging.info('OUT OF FORMAT in record')
+            return False
+        
+        # recording on the file
+        f = open(address, 'a')
+
+        # WHITE WINS (BLACK DIDN'T MOVE)
+        if s_record == '1-0':
+            f.write('1-0')
+        # BLACK WINS (WHITE DIDN'T MOVE)
+        elif s_record == '0-1':
+            f.write('{}\t0-1'.format(self.turn))
+        # NOTE: after Board.move, parameter player is changed
+        elif -self.player == WHITE:
+            f.write('{}\t'.format(self.turn) + s_record.ljust(12))
+        elif -self.player == BLACK:
+            f.write(s_record.ljust(12) + '\n')
+        else:
+            logging.error('UNEXPECTED VALUE of PLAYER in record')
+            print('SYSTEM ERROR')
+            sys.exit()
+        
+        f.close()
+
+        return True
+
+
+    def tracefile(self, destination_turn, destination_player):
+        # preparing (initializing) the sub file
+        open(SUBRECADDRESS, 'w').close()
+        # reading the file
+        f = open(MAINRECADDRESS, 'r')
+        # deleting first and last spaces
+        line = f.read().strip(' ').strip('\n')
+        f.close()
+        logging.info('line is {}'.format(line))
+
+        # valid s holder
+        holder = ''
+        # local Board
+        local_board = Board()
+        
+        for letter in line:
+            if letter in [' ', '\t', '\n']:
+                logging.info('holder is {}'.format(holder))
+                motion = local_board.s_analyze(holder)
+                if type(motion) is list:
+                    local_board.move(*motion)
+                    local_board.record(holder, SUBRECADDRESS)
+                    # destination
+                    if local_board.turn == destination_turn and local_board.player == destination_player:
+                        logging.info('trace succeeded')
+                        # copying the file
+                        f = open(MAINRECADDRESS, 'w')
+                        g = open(SUBRECADDRESS, 'r')
+                        f.write(g.read())
+                        f.close()
+                        g.close()
+                        return local_board
+                holder = ''
+            else:
+                holder = ''.join([holder, letter])
+                logging.info('holder = {}'.format(holder))
+                
+        # reaching here, you cannot back
+        logging.warning('FAILED TO BACK')
+        return self
 

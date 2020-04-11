@@ -3,7 +3,11 @@
 
 
 import logging
-logging.basicConfig(level=logging.CRITICAL, format='%(levelname)s - %(filename)s - L%(lineno)d - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(filename)s - L%(lineno)d - %(message)s')
+
+# records
+MAINRECADDRESS = '.\\mainrecord.txt'
+SUBRECADDRESS = '.\\subrecord.txt'
 
 SIZE = 8
 OVERSIZE = SIZE * SIZE
@@ -22,3 +26,6 @@ K = KING = 6
 
 WHITE = 1
 BLACK = -1
+
+GAME_PRC = 0    # game processing
+GAME_SET = 1    # game set
