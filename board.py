@@ -30,7 +30,8 @@ class Board:
         self.castl_q = input_q
         self.turn = 1
         self.player = input_player
-                
+        self.s = ''
+                        
 
     def BOARDprint(self):
         print('\n')
@@ -69,7 +70,7 @@ class Board:
         elif piece == PAWN:
             # not promoting at the edge
             if (toROW == 8 - 1 or toROW == 1 - 1) and promote not in [R, N, B, Q]:
-                logging.debug('NECESSARY TO PROMOTE')
+                logging.info('NECESSARY TO PROMOTE')
                 return False
             # normal motion (one step forward); the same COL, appropriate ROW, TO = EMPTY
             # note: if player is WHITE (=1), the row number has to increase
@@ -161,7 +162,7 @@ class Board:
             if not (fundam.InSize(focused[0]) and fundam.InSize(focused[1])):
                 break
             if self.board[focused[COL]][focused[ROW]] != EMPTY:
-                logging.info('THERE IS AN OBSTACLE in the way')
+                logging.debug('THERE IS AN OBSTACLE in the way')
                 return False
             focused[COL] += direction[COL]
             focused[ROW] += direction[ROW]
@@ -307,28 +308,28 @@ class Board:
         return True
     
 
-    def s_analyze(self, s):
+    def s_analyze(self):
         # avoiding bugs
-        if len(s) == 0:
+        if len(self.s) == 0:
             logging.debug('len(s) == 0')
             return False
 
         # deleting all of !? at the tail
-        while s[-1] in ['!', '?']:
-            s = s.rstrip(s[-1])
-            if len(s) == 0:
+        while self.s[-1] in ['!', '?']:
+            self.s = self.s.rstrip(self.s[-1])
+            if len(self.s) == 0:
                 return False
 
         # deleting all of SPACE
-        s = s.replace(' ', '')
+        self.s = self.s.replace(' ', '')
 
         # avoiding bugs
-        if len(s) == 0:
+        if len(self.s) == 0:
             logging.debug('len(s) == 0')
             return False
 
         # matching the normal format
-        match = re.match(r'^[PRNBQK]?[a-h]?[1-8]?[x]?[a-h][1-8](=[RNBQ]|e.p.)?[\+#]?$', s)
+        match = re.match(r'^[PRNBQK]?[a-h]?[1-8]?[x]?[a-h][1-8](=[RNBQ]|e.p.)?[\+#]?$', self.s)
 
         if match:
             line = match.group()
@@ -372,9 +373,10 @@ class Board:
 
             # promotion
             if '=' in line:
-                promote = line[line.index('=') + 1]
+                promote = IO.ToggleType(line[line.index('=') + 1])
             else:
                 promote = EMPTY
+            logging.info('promote = {}'.format(promote))
 
             # raising up all the available candidates
             candidates = []
@@ -461,50 +463,60 @@ class Board:
                 print('SYSTEM ERROR')
                 sys.exit()
 
+            # game set
+            if self.s == '1/2-1/2':
+                logging.info('DRAW GAME')
+                return EMPTY
+            elif self.s == '1-0' and self.player == BLACK:
+                logging.info('WHITE WINS')
+                return WHITE
+            elif self.s == '0-1' and self.player == WHITE:
+                logging.info('BLACK WINS')
+                return BLACK
             # Q-side
-            if s in ['O-O-O', 'o-o-o', '0-0-0'] and self.board[e - 1][row] == self.player * KING:
-                logging.info('format is {}, castl is {}'.format(s, self.castl_q))
+            elif self.s in ['O-O-O', 'o-o-o', '0-0-0'] and self.board[e - 1][row] == self.player * KING:
+                logging.info('format is {}, castl is {}'.format(self.s, self.castl_q))
                 return [e - 1, row, c - 1, row, EMPTY]
             # K-side
-            elif s in ['O-O', 'o-o', '0-0'] and self.board[e - 1][row] == self.player * KING:
-                logging.info('format is {}, castl is {}'.format(s, self.castl_k))
+            elif self.s in ['O-O', 'o-o', '0-0'] and self.board[e - 1][row] == self.player * KING:
+                logging.info('format is {}, castl is {}'.format(self.s, self.castl_k))
                 return [e - 1, row, g - 1, row, EMPTY]
             else:
                 logging.debug('INVALID FORMAT')
                 return False
 
 
-    def record(self, s, address):
+    def record(self, address):
         # avoding bugs
-        if len(s) == 0:
+        if len(self.s) == 0:
             logging.debug('len(s) in record is 0')
             return False
 
         # deleting !? at the end
-        while s[-1] in ['!', '?']:
-            del s[-1]
-            if len(s) == 0:
+        while self.s[-1] in ['!', '?']:
+            del self.s[-1]
+            if len(self.s) == 0:
                 logging.debug('len(s) in record is 0')
                 return False
 
         # deleting all spaces
-        s = s.replace(' ', '')
+        self.s = self.s.replace(' ', '')
 
         # avoiding bugs
-        if len(s) == 0:
+        if len(self.s) == 0:
             logging.debug('len(s) in record is 0')
             return False
 
         # normal
-        match = re.match(r'^[PRNBQK]?[a-h]?[1-8]?[x]?[a-h][1-8](=[RNBQ]|e.p.)?[\+#]?$', s)
+        match = re.match(r'^[PRNBQK]?[a-h]?[1-8]?[x]?[a-h][1-8](=[RNBQ]|e.p.)?[\+#]?$', self.s)
         if match:
             s_record = match.group()
         # give up
-        elif s in ['1-0', '0-1', '1/2-1/2']:
-            s_record = s
+        elif self.s in ['1-0', '0-1', '1/2-1/2']:
+            s_record = self.s
         # castling
-        elif s in ['O-O-O', 'O-O']:
-            s_record = s.replace('o', 'O').replace('0', 'O')
+        elif self.s in ['O-O-O', 'O-O']:
+            s_record = self.s.replace('o', 'O').replace('0', 'O')
         else:
             logging.info('OUT OF FORMAT in record')
             return False
@@ -533,7 +545,12 @@ class Board:
         return True
 
 
-    def tracefile(self, destination_turn, destination_player):
+    def tracefile(self, destination_turn, destination_player, isrecwrite=True):
+        # back to the first
+        if destination_turn == 1 and destination_player == WHITE:
+            local_board = Board()
+            return local_board
+
         # preparing (initializing) the sub file
         open(SUBRECADDRESS, 'w').close()
         # reading the file
@@ -550,26 +567,67 @@ class Board:
         
         for letter in line:
             if letter in [' ', '\t', '\n']:
-                logging.info('holder is {}'.format(holder))
-                motion = local_board.s_analyze(holder)
+                logging.warning('holder is {}'.format(holder))
+                local_board.s = holder
+                motion = local_board.s_analyze()
+                # normal motion
                 if type(motion) is list:
                     local_board.move(*motion)
-                    local_board.record(holder, SUBRECADDRESS)
+                    local_board.record(SUBRECADDRESS)
                     # destination
                     if local_board.turn == destination_turn and local_board.player == destination_player:
                         logging.info('trace succeeded')
                         # copying the file
+                        if isrecwrite:
+                            f = open(MAINRECADDRESS, 'w')
+                            g = open(SUBRECADDRESS, 'r')
+                            f.write(g.read())
+                            f.close()
+                            g.close()
+                        return local_board
+                # game set
+                elif type(motion) is int:
+                    print('GAME SET')
+                    # copying the record
+                    if isrecwrite:
                         f = open(MAINRECADDRESS, 'w')
                         g = open(SUBRECADDRESS, 'r')
                         f.write(g.read())
                         f.close()
                         g.close()
-                        return local_board
+                    return motion
                 holder = ''
             else:
                 holder = ''.join([holder, letter])
                 logging.info('holder = {}'.format(holder))
                 
+        # last one holder
+        logging.warning('holder is {}'.format(holder))
+        local_board.s = holder
+        motion = local_board.s_analyze()
+        if type(motion) is list:
+            local_board.move(*motion)
+            local_board.record(SUBRECADDRESS)
+            if local_board.turn == destination_turn and local_board.player == destination_player:
+                logging.info('trace succeeded')
+                # copying the file
+                if isrecwrite:
+                    f = open(MAINRECADDRESS, 'w')
+                    g = open(SUBRECADDRESS, 'r')
+                    f.write(g.read())
+                    f.close()
+                    g.close()
+                return local_board
+        elif type(motion) is int:
+            # copying the record
+            if isrecwrite:
+                f = open(MAINRECADDRESS, 'w')
+                g = open(SUBRECADDRESS, 'r')
+                f.write(g.read())
+                f.close()
+                g.close()
+            return motion
+
         # reaching here, you cannot back
         logging.warning('FAILED TO BACK')
         return self

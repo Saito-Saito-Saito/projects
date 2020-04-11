@@ -3,7 +3,7 @@
 
 
 import logging
-logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(filename)s - L%(lineno)d - %(message)s')
+logging.basicConfig(level=logging.WARNING, format='%(levelname)s - %(filename)s - L%(lineno)d - %(message)s')
 
 # records
 MAINRECADDRESS = '.\\mainrecord.txt'
