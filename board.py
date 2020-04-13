@@ -37,27 +37,27 @@ class Board:
         print('\n')
         print('\t    a   b   c   d   e   f   g   h')
         print('\t   -------------------------------')
-        for row in range(SIZE - 1, -1, -1):
-            print('\t{} |'.format(row + 1), end='')
-            for col in range(SIZE):
-                print(' {} |'.format(IO.ToggleType(self.board[col][row])), end='')
-            print(' {}'.format(row + 1))
+        for rank in range(SIZE - 1, -1, -1):
+            print('\t{} |'.format(rank + 1), end='')
+            for file in range(SIZE):
+                print(' {} |'.format(IO.ToggleType(self.board[file][rank])), end='')
+            print(' {}'.format(rank + 1))
             print('\t   -------------------------------')
         print('\t    a   b   c   d   e   f   g   h')
         print('\n')
     
 
-    def motionjudge(self, frCOL, frROW, toCOL, toROW, promote=EMPTY):
+    def motionjudge(self, frFILE, frRANK, toFILE, toRANK, promote=EMPTY):
         # inside / out of the board
-        if not (fundam.InSize(frCOL) and fundam.InSize(frROW) and fundam.InSize(toCOL) and fundam.InSize(toROW)):
+        if not (fundam.InSize(frFILE) and fundam.InSize(frRANK) and fundam.InSize(toFILE) and fundam.InSize(toRANK)):
             logging.debug('OUT OF THE BOARD')
             return False
 
-        player = fundam.PosNeg(self.board[frCOL][frROW])
-        piece = abs(self.board[frCOL][frROW])
+        player = fundam.PosNeg(self.board[frFILE][frRANK])
+        piece = abs(self.board[frFILE][frRANK])
         
         # moving to the square where there is  own piece
-        if fundam.PosNeg(self.board[toCOL][toROW]) == player:
+        if fundam.PosNeg(self.board[toFILE][toRANK]) == player:
             logging.debug('MOVING TO OWN SQUARE')
             return False
 
@@ -69,21 +69,21 @@ class Board:
         # PAWN
         elif piece == PAWN:
             # not promoting at the edge
-            if (toROW == 8 - 1 or toROW == 1 - 1) and promote not in [R, N, B, Q]:
+            if (toRANK == 8 - 1 or toRANK == 1 - 1) and promote not in [R, N, B, Q]:
                 logging.info('NECESSARY TO PROMOTE')
                 return False
-            # normal motion (one step forward); the same COL, appropriate ROW, TO = EMPTY
-            # note: if player is WHITE (=1), the row number has to increase
-            if frCOL == toCOL and toROW - frROW == player and self.board[toCOL][toROW] == EMPTY:
+            # normal motion (one step forward); the same FILE, appropriate RANK, TO = EMPTY
+            # note: if player is WHITE (=1), the rank number has to increase
+            if frFILE == toFILE and toRANK - frRANK == player and self.board[toFILE][toRANK] == EMPTY:
                 return True
-            # normal capturing; next COL, appropriate ROW, TO = opponent
-            if abs(toCOL - frCOL) == 1 and toROW - frROW == player and fundam.PosNeg(self.board[toCOL][toROW]) == -player:
+            # normal capturing; next FILE, appropriate RANK, TO = opponent
+            if abs(toFILE - frFILE) == 1 and toRANK - frRANK == player and fundam.PosNeg(self.board[toFILE][toRANK]) == -player:
                 return True
-            # first two steps; adequate frROW the same COL, appropriate ROW, passing squares are EMPTY
-            if ((player == WHITE and frROW == 2 - 1) or (player == BLACK and frROW == 7 - 1)) and frCOL == toCOL and toROW - frROW == 2 * player and self.board[frCOL][frROW + player] == self.board[toCOL][toROW] == EMPTY:
+            # first two steps; adequate frRANK the same FILE, appropriate RANK, passing squares are EMPTY
+            if ((player == WHITE and frRANK == 2 - 1) or (player == BLACK and frRANK == 7 - 1)) and frFILE == toFILE and toRANK - frRANK == 2 * player and self.board[frFILE][frRANK + player] == self.board[toFILE][toRANK] == EMPTY:
                 return True
             # en passant; FR - ep_target, TO - ep_target, TO = EMPTY
-            if abs(self.ep_target[COL] - frCOL) == 1 and frROW == self.ep_target[ROW] and toCOL == self.ep_target[COL] and toROW - self.ep_target[ROW] == player and self.board[toCOL][toROW] == EMPTY:
+            if abs(self.ep_target[FILE] - frFILE) == 1 and frRANK == self.ep_target[RANK] and toFILE == self.ep_target[FILE] and toRANK - self.ep_target[RANK] == player and self.board[toFILE][toRANK] == EMPTY:
                 return True
             # all other moves are invalid
             logging.debug('INVALID MOTION of PAWN')
@@ -92,7 +92,7 @@ class Board:
         # ROOK
         elif piece == ROOK:
             # invalid motion
-            if frCOL != toCOL and frROW != toROW:
+            if frFILE != toFILE and frRANK != toRANK:
                 logging.debug('INVALID MOTION of ROOK')
                 return False
             # else, necessary to check whether there is an obstacle in the way
@@ -100,7 +100,7 @@ class Board:
         # KNIGHT
         elif piece == KNIGHT:
             # valid motion
-            if (abs(toCOL - frCOL) == 1 and abs(toROW - frROW) == 2) or (abs(toCOL - frCOL) == 2 and abs(toROW - frROW) == 1):
+            if (abs(toFILE - frFILE) == 1 and abs(toRANK - frRANK) == 2) or (abs(toFILE - frFILE) == 2 and abs(toRANK - frRANK) == 1):
                 return True
             # all other motion is invalid
             logging.debug('INVALID MOTION of KNIGHT')
@@ -109,7 +109,7 @@ class Board:
         # BISHOP
         elif piece == BISHOP:
             # invalid motion
-            if abs(toCOL - frCOL) != abs(toROW - frROW):
+            if abs(toFILE - frFILE) != abs(toRANK - frRANK):
                 logging.debug('INVALID MOTION of BISHOP')
                 return False
             # else, necessary to check an obstacle in the way
@@ -117,7 +117,7 @@ class Board:
         # QUEEN
         elif piece == QUEEN:
             # invalid motion (cf, B/R)
-            if frCOL != toCOL and frROW != toROW and abs(toCOL - frCOL) != abs(toROW - frROW):
+            if frFILE != toFILE and frRANK != toRANK and abs(toFILE - frFILE) != abs(toRANK - frRANK):
                 logging.debug('INVALID MOTION of QUEEN')
                 return False
             # else, necessary to check an obstacle in the way
@@ -125,24 +125,24 @@ class Board:
         # KING
         elif piece == KING:
             # normal motion (one step)
-            if abs(toCOL - frCOL) <= 1 and abs(toROW - frROW) <= 1:
+            if abs(toFILE - frFILE) <= 1 and abs(toRANK - frRANK) <= 1:
                 logging.info('KING NORMAL')
                 return True
             # castling
             if player == WHITE:
-                row = 1 - 1
+                rank = 1 - 1
             elif player == BLACK:
-                row = 8 - 1
+                rank = 8 - 1
             else:
                 logging.error('UNEXPECTED PLAYER VALUE in motionjudge')
                 print('SYSTEM ERROR')
                 sys.exit()
             # Q-side
-            if player in self.castl_q and frCOL == e - 1 and frROW == row and toCOL == c - 1 and toROW == row and self.board[b - 1][row] == self.board[c - 1][row] == self.board[d - 1][row] == EMPTY:
+            if player in self.castl_q and frFILE == e - 1 and frRANK == rank and toFILE == c - 1 and toRANK == rank and self.board[b - 1][rank] == self.board[c - 1][rank] == self.board[d - 1][rank] == EMPTY:
                 logging.debug('KING Q-side')
                 return True
             # K-side
-            if player in self.castl_k and frCOL == e - 1 and frROW == row and toCOL == g - 1 and toROW == row and self.board[f - 1][row] == self.board[g - 1][row] == EMPTY:
+            if player in self.castl_k and frFILE == e - 1 and frRANK == rank and toFILE == g - 1 and toRANK == rank and self.board[f - 1][rank] == self.board[g - 1][rank] == EMPTY:
                 logging.debug('KING K-side')
                 return True
             # all other moves are invalid
@@ -156,70 +156,70 @@ class Board:
             sys.exit()
 
         # whether there is an obstacle in the wauy of R/B/Q
-        direction = [fundam.PosNeg(toCOL - frCOL), fundam.PosNeg(toROW - frROW)]
-        focused = [frCOL + direction[COL], frROW + direction[ROW]]
-        while focused[COL] != toCOL or focused[ROW] != toROW:
+        direction = [fundam.PosNeg(toFILE - frFILE), fundam.PosNeg(toRANK - frRANK)]
+        focused = [frFILE + direction[FILE], frRANK + direction[RANK]]
+        while focused[FILE] != toFILE or focused[RANK] != toRANK:
             if not (fundam.InSize(focused[0]) and fundam.InSize(focused[1])):
                 break
-            if self.board[focused[COL]][focused[ROW]] != EMPTY:
+            if self.board[focused[FILE]][focused[RANK]] != EMPTY:
                 logging.debug('THERE IS AN OBSTACLE in the way')
                 return False
-            focused[COL] += direction[COL]
-            focused[ROW] += direction[ROW]
+            focused[FILE] += direction[FILE]
+            focused[RANK] += direction[RANK]
         # there is nothing in the wauy
         return True
 
     
-    def move(self, frCOL, frROW, toCOL, toROW, promote=EMPTY):
+    def move(self, frFILE, frRANK, toFILE, toRANK, promote=EMPTY):
         ### INVALID MOTON
-        if self.motionjudge(frCOL, frROW, toCOL, toROW, promote) == False:
+        if self.motionjudge(frFILE, frRANK, toFILE, toRANK, promote) == False:
             return False
         
-        piece = abs(self.board[frCOL][frROW])
+        piece = abs(self.board[frFILE][frRANK])
 
         ### SPECIAL EVENTS
         # castling
-        if piece == KING and abs(toCOL - frCOL) > 1:
+        if piece == KING and abs(toFILE - frFILE) > 1:
             if self.player == WHITE:
-                row = 1 - 1
+                rank = 1 - 1
             elif self.player == BLACK:
-                row = 8 - 1
+                rank = 8 - 1
             else:
                 logging.error('UNEXPECTED VALUE of PLAYER in move')
                 print('SYSTEM ERROR')
                 sys.exit()
             # moving rook
-            if toCOL == c - 1:
-                self.board[d - 1][row] = self.player * ROOK
-                self.board[a - 1][row] = EMPTY
-            elif toCOL == g - 1:
-                self.board[f - 1][row] = self.player * ROOK
-                self.board[h - 1][row] = EMPTY
+            if toFILE == c - 1:
+                self.board[d - 1][rank] = self.player * ROOK
+                self.board[a - 1][rank] = EMPTY
+            elif toFILE == g - 1:
+                self.board[f - 1][rank] = self.player * ROOK
+                self.board[h - 1][rank] = EMPTY
             else:
-                logging.error('UNEXPECTED VALUE of toCOL in move')
+                logging.error('UNEXPECTED VALUE of toFILE in move')
                 return False
         # en passant
-        if piece == PAWN and frCOL != toCOL and self.board[toCOL][toROW] == EMPTY:
+        if piece == PAWN and frFILE != toFILE and self.board[toFILE][toRANK] == EMPTY:
             # capturing opponent's pawn
-            self.board[toCOL][frROW] = EMPTY        
+            self.board[toFILE][frRANK] = EMPTY        
         # promotion
-        if piece == PAWN and (toROW == 8 - 1 or toROW == 1 - 1):
-            self.board[frCOL][frROW] = self.player * promote
+        if piece == PAWN and (toRANK == 8 - 1 or toRANK == 1 - 1):
+            self.board[frFILE][frRANK] = self.player * promote
         # moving own piece
-        self.board[toCOL][toROW] = self.board[frCOL][frROW]
-        self.board[frCOL][frROW] = EMPTY
+        self.board[toFILE][toRANK] = self.board[frFILE][frRANK]
+        self.board[frFILE][frRANK] = EMPTY
         
         ### PARAMETERS CONTROL
         # for e.p.
-        if piece == PAWN and abs(toROW - frROW) > 1:
-            self.ep_target = [toCOL, toROW]
+        if piece == PAWN and abs(toRANK - frRANK) > 1:
+            self.ep_target = [toFILE, toRANK]
         else:
             self.ep_target = [OVERSIZE, OVERSIZE]
         # for castling q-side
-        if self.player in self.castl_q and (piece == KING or (piece == ROOK and frCOL == a - 1)):
+        if self.player in self.castl_q and (piece == KING or (piece == ROOK and frFILE == a - 1)):
             self.castl_q.remove(self.player)
         # for castling k-side
-        if self.player in self.castl_k and (piece == KING or (piece == ROOK and frCOL == h - 1)):
+        if self.player in self.castl_k and (piece == KING or (piece == ROOK and frFILE == h - 1)):
             self.castl_k.remove(self.player)
         # turn count
         if self.player == BLACK:
@@ -233,9 +233,9 @@ class Board:
 
     def king_place(self, searcher):
         # searching for the checkee's king
-        for col in range(SIZE):
-            if searcher * KING in self.board[col]:
-                return [col, self.board[col].index(searcher * KING)]
+        for file in range(SIZE):
+            if searcher * KING in self.board[file]:
+                return [file, self.board[file].index(searcher * KING)]
         else:
             # there is no king
             return EMPTY
@@ -245,18 +245,18 @@ class Board:
         #if there is no king, impossible to check
         TO = self.king_place(checkee)
         try:
-            toCOL = TO[COL]
-            toROW = TO[ROW]
+            toFILE = TO[FILE]
+            toRANK = TO[RANK]
         except:
             logging.debug('THERE IS NO KING')
             return False
 
         # count up the checking pieces
         count = 0
-        for frCOL in range(SIZE):
-            for frROW in range(SIZE):
-                if fundam.PosNeg(self.board[frCOL][frROW]) == -checkee and self.motionjudge(frCOL, frROW, toCOL, toROW, Q):
-                    logging.warning('CHECK: {}, {} -> {}, {}'.format(frCOL, frROW, toCOL, toROW))
+        for frFILE in range(SIZE):
+            for frRANK in range(SIZE):
+                if fundam.PosNeg(self.board[frFILE][frRANK]) == -checkee and self.motionjudge(frFILE, frRANK, toFILE, toRANK, Q):
+                    logging.warning('CHECK: {}, {} -> {}, {}'.format(frFILE, frRANK, toFILE, toRANK))
                     count += 1
         # if checkee is not checked, return 0
         return count
@@ -268,17 +268,17 @@ class Board:
             return False
         
         # searching for all the moves matee can
-        for frCOL in range(SIZE):
-            for frROW in range(SIZE):
-                if fundam.PosNeg(self.board[frCOL][frROW]) == matee:
-                    for toCOL in range(SIZE):
-                        for toROW in range(SIZE):
+        for frFILE in range(SIZE):
+            for frRANK in range(SIZE):
+                if fundam.PosNeg(self.board[frFILE][frRANK]) == matee:
+                    for toFILE in range(SIZE):
+                        for toRANK in range(SIZE):
                             # cloning board
                             local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player)
-                            if local_board.move(frCOL, frROW, toCOL, toROW, Q) and local_board.checkcounter(matee) == 0:
-                                logging.info('THERE IS {}, {} -> {}, {}'.format(frCOL,frROW,toCOL,toROW))
+                            if local_board.move(frFILE, frRANK, toFILE, toRANK, Q) and local_board.checkcounter(matee) == 0:
+                                logging.info('THERE IS {}, {} -> {}, {}'.format(frFILE,frRANK,toFILE,toRANK))
                                 return False
-                    logging.info('"FR = {}, {}" was unavailable'.format(frCOL, frROW))
+                    logging.info('"FR = {}, {}" was unavailable'.format(frFILE, frRANK))
 
         # completing the loop, there is no way to flee
         return True
@@ -291,18 +291,18 @@ class Board:
             return False
 
         # searching all the moves for one that can move without being checked
-        for frCOL in range(SIZE):
-            for frROW in range(SIZE):
-                if fundam.PosNeg(self.board[frCOL][frROW]) == matee:
-                    for toCOL in range(SIZE):
-                        for toROW in range(SIZE):
+        for frFILE in range(SIZE):
+            for frRANK in range(SIZE):
+                if fundam.PosNeg(self.board[frFILE][frRANK]) == matee:
+                    for toFILE in range(SIZE):
+                        for toRANK in range(SIZE):
                             local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q)
                             # in case it is not checked after moving
-                            motion = local_board.move(frCOL, frROW, toCOL, toROW, Q)
+                            motion = local_board.move(frFILE, frRANK, toFILE, toRANK, Q)
                             count = local_board.checkcounter(matee)
                             logging.debug('motion: {}, count: {}'.format(motion, count))
                             if motion and count in [0, False]:
-                                logging.info('THERE IS {}, {} -> {}, {}'.format(frCOL, frROW, toCOL, toROW))
+                                logging.info('THERE IS {}, {} -> {}, {}'.format(frFILE, frRANK, toFILE, toRANK))
                                 return False
         # completing the loop, there is no way to avoid check when moving
         return True
@@ -343,21 +343,21 @@ class Board:
                 piece = PAWN
             logging.info('PIECE == {}'.format(piece))
 
-            # written info of what row the piece comes from
+            # written info of what rank the piece comes from
             if line[0].isdecimal():
-                frCOL = OVERSIZE
-                frROW = IO.ToggleType(line[0]) - 1
+                frFILE = OVERSIZE
+                frRANK = IO.ToggleType(line[0]) - 1
                 line = line.lstrip(line[0])
-            # written info of what col the piecce comes from
+            # written info of what file the piecce comes from
             elif ord('a') <= ord(line[0]) <= ord('h') and ord('a') <= ord(line[1]) <= ord('x'):
-                frCOL = IO.ToggleType(line[0]) - 1
-                frROW = OVERSIZE
+                frFILE = IO.ToggleType(line[0]) - 1
+                frRANK = OVERSIZE
                 line = line.lstrip(line[0])
             # nothing is written about where the piece comes from
             else:
-                frCOL = OVERSIZE
-                frROW = OVERSIZE
-            logging.info('FR = {}, {}'.format(frCOL, frROW))
+                frFILE = OVERSIZE
+                frRANK = OVERSIZE
+            logging.info('FR = {}, {}'.format(frFILE, frRANK))
 
             # whether the piece has captured one of the opponent's pieces
             if line[0] == 'x':
@@ -367,9 +367,9 @@ class Board:
                 CAPTURED = False
 
             # where the piece goes to
-            toCOL = IO.ToggleType(line[0]) - 1
-            toROW = IO.ToggleType(line[1]) - 1
-            logging.info('TO = {}, {}'.format(toCOL, toROW))
+            toFILE = IO.ToggleType(line[0]) - 1
+            toRANK = IO.ToggleType(line[1]) - 1
+            logging.info('TO = {}, {}'.format(toFILE, toRANK))
 
             # promotion
             if '=' in line:
@@ -380,39 +380,39 @@ class Board:
 
             # raising up all the available candidates
             candidates = []
-            for col in range(SIZE):
-                # when frCOL is written
-                if fundam.InSize(frCOL) and frCOL != col:
+            for file in range(SIZE):
+                # when frFILE is written
+                if fundam.InSize(frFILE) and frFILE != file:
                     continue
 
-                for row in range(SIZE):
-                    # when frROW is written
-                    if fundam.InSize(frROW) and frROW != row:
+                for rank in range(SIZE):
+                    # when frRANK is written
+                    if fundam.InSize(frRANK) and frRANK != rank:
                         continue
 
                     # piece
-                    if self.board[col][row] != self.player * piece:
+                    if self.board[file][rank] != self.player * piece:
                         continue
 
                     # available motion
-                    if self.motionjudge(col, row, toCOL, toROW, promote) == False:
+                    if self.motionjudge(file, rank, toFILE, toRANK, promote) == False:
                         continue
 
-                    candidates.append([col, row])
+                    candidates.append([file, rank])
             logging.info('candidates = {}'.format(candidates))
 
             # checking all the candidates
             for reference in range(len(candidates)):
                 local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player)
-                local_board.move(candidates[reference][COL], candidates[reference][ROW], toCOL, toROW, promote)
+                local_board.move(candidates[reference][FILE], candidates[reference][RANK], toFILE, toRANK, promote)
 
                 # capture; searching for the opponent's piece that has disappeared
                 if CAPTURED or 'e.p.' in line:
-                    if fundam.PosNeg(self.board[toCOL][toROW]) == -self.player:
+                    if fundam.PosNeg(self.board[toFILE][toRANK]) == -self.player:
                         break
-                    if fundam.InSize(toROW - 1) and fundam.PosNeg(self.board[toCOL][toROW - 1]) == -self.player and fundam.PosNeg(local_board.board[toCOL][toROW - 1]) == EMPTY:
+                    if fundam.InSize(toRANK - 1) and fundam.PosNeg(self.board[toFILE][toRANK - 1]) == -self.player and fundam.PosNeg(local_board.board[toFILE][toRANK - 1]) == EMPTY:
                         break
-                    if fundam.InSize(toROW + 1) and fundam.PosNeg(self.board[toCOL][toROW + 1]) == -self.player and fundam.PosNeg(local_board.board[toCOL][toROW + 1]) == EMPTY:
+                    if fundam.InSize(toRANK + 1) and fundam.PosNeg(self.board[toFILE][toRANK + 1]) == -self.player and fundam.PosNeg(local_board.board[toFILE][toRANK + 1]) == EMPTY:
                         break
                     # here no piece can capture a piece
                     logging.info('{} does not capture any piece'.format(candidates[reference]))
@@ -434,7 +434,7 @@ class Board:
                     continue
 
                 # en passant
-                if 'e.p.' in line and self.board[toCOL][toROW] != EMPTY:
+                if 'e.p.' in line and self.board[toFILE][toRANK] != EMPTY:
                     logging.info('{} does not en passant'.format(candidates[reference]))
                     del candidates[reference]
                     reference -= 1
@@ -443,10 +443,10 @@ class Board:
             # return
             if len(candidates) == 1:
                 logging.info('NORMALLY RETURNED from s_analyze')
-                return [candidates[0][COL], candidates[0][ROW], toCOL, toROW, promote]
+                return [candidates[0][FILE], candidates[0][RANK], toFILE, toRANK, promote]
             elif len(candidates) > 1:
                 logging.warning('THERE IS ANOTHER MOVE')
-                return [candidates[0][COL], candidates[0][ROW], toCOL, toROW, promote]
+                return [candidates[0][FILE], candidates[0][RANK], toFILE, toRANK, promote]
             else:
                 logging.info('THERE IS NO MOVE')
                 return False
@@ -455,9 +455,9 @@ class Board:
         else:
             # check whether it represents castling
             if self.player == WHITE:
-                row = 1 - 1
+                rank = 1 - 1
             elif self.player == BLACK:
-                row = 8 - 1
+                rank = 8 - 1
             else:
                 logging.error('UNEXPECTED PLAYER VALUE in s_analyze')
                 print('SYSTEM ERROR')
@@ -474,13 +474,13 @@ class Board:
                 logging.info('BLACK WINS')
                 return BLACK
             # Q-side
-            elif self.s in ['O-O-O', 'o-o-o', '0-0-0'] and self.board[e - 1][row] == self.player * KING:
+            elif self.s in ['O-O-O', 'o-o-o', '0-0-0'] and self.board[e - 1][rank] == self.player * KING:
                 logging.info('format is {}, castl is {}'.format(self.s, self.castl_q))
-                return [e - 1, row, c - 1, row, EMPTY]
+                return [e - 1, rank, c - 1, rank, EMPTY]
             # K-side
-            elif self.s in ['O-O', 'o-o', '0-0'] and self.board[e - 1][row] == self.player * KING:
+            elif self.s in ['O-O', 'o-o', '0-0'] and self.board[e - 1][rank] == self.player * KING:
                 logging.info('format is {}, castl is {}'.format(self.s, self.castl_k))
-                return [e - 1, row, g - 1, row, EMPTY]
+                return [e - 1, rank, g - 1, rank, EMPTY]
             else:
                 logging.debug('INVALID FORMAT')
                 return False

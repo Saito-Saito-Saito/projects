@@ -55,7 +55,7 @@ def ToggleType(target):
             return Q
         elif target == 'K':
             return K
-        # row id
+        # rank id
         elif ord('a') <= ord(target) <= ord('h'):
             return ord(target) - ord('a') + 1
         else:
