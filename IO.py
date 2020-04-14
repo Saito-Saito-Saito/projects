@@ -38,7 +38,7 @@ def ToggleType(target):
             return False
 
     # str, chr -> int
-    elif type(target) is str or type(target) is chr:
+    elif type(target) is str:
         # a number
         if target.isdecimal():
             return int(target)
@@ -55,7 +55,7 @@ def ToggleType(target):
             return Q
         elif target == 'K':
             return K
-        # rank id
+        # file id
         elif ord('a') <= ord(target) <= ord('h'):
             return ord(target) - ord('a') + 1
         else:

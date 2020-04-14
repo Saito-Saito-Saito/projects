@@ -26,6 +26,3 @@ K = KING = 6
 
 WHITE = 1
 BLACK = -1
-
-GAME_PRC = 0    # game processing
-GAME_SET = 1    # game set

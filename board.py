@@ -12,7 +12,7 @@ import IO
 
 class Board:    
     def __init__(self, input_board=[], input_taget=[OVERSIZE, OVERSIZE], input_k=[WHITE, BLACK], input_q=[WHITE, BLACK], input_player=WHITE):
-        if len(input_board) == 8:
+        if len(input_board) == SIZE:
             self.board = copy.deepcopy(input_board)
         else:
             self.board = [
