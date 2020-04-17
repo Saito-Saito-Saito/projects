@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 # board.py
 
-import re
 import copy
+import re
 import sys
 
 from config import *
@@ -11,7 +11,7 @@ import IO
 
 
 class Board:    
-    def __init__(self, input_board=[], input_taget=[OVERSIZE, OVERSIZE], input_k=[WHITE, BLACK], input_q=[WHITE, BLACK], input_player=WHITE):
+    def __init__(self, input_board=[], input_taget=[OVERSIZE, OVERSIZE], input_k=[WHITE, BLACK], input_q=[WHITE, BLACK], input_player=WHITE, input_turn=1, input_s=''):
         if len(input_board) == SIZE:
             self.board = copy.deepcopy(input_board)
         else:
@@ -25,12 +25,12 @@ class Board:
                 [N, P, 0, 0, 0, 0, -P, -N],
                 [R, P, 0, 0, 0, 0, -P, -R]
             ]
-        self.ep_target = input_taget
-        self.castl_k = input_k
-        self.castl_q = input_q
-        self.turn = 1
+        self.ep_target = copy.deepcopy(input_taget)
+        self.castl_k = copy.deepcopy(input_k)
+        self.castl_q = copy.deepcopy(input_q)
+        self.turn = input_turn
         self.player = input_player
-        self.s = ''
+        self.s = input_s
                         
 
     def BOARDprint(self):
@@ -139,10 +139,22 @@ class Board:
                 sys.exit()
             # Q-side
             if player in self.castl_q and frFILE == e - 1 and frRANK == rank and toFILE == c - 1 and toRANK == rank and self.board[b - 1][rank] == self.board[c - 1][rank] == self.board[d - 1][rank] == EMPTY:
+                # K must not be checked while castling
+                for ran in range(SIZE):
+                    for fil in range(SIZE):
+                        if fundam.PosNeg(self.board[fil][ran])==-player and (self.motionjudge(fil,ran,e-1,rank,Q) or self.motionjudge(fil,ran,d-1,rank,Q) or self.motionjudge(fil,ran,c-1,rank,Q)):
+                            logging.warning('CHECKED IN THE WAY')
+                            return False
                 logging.debug('KING Q-side')
                 return True
             # K-side
             if player in self.castl_k and frFILE == e - 1 and frRANK == rank and toFILE == g - 1 and toRANK == rank and self.board[f - 1][rank] == self.board[g - 1][rank] == EMPTY:
+                # K must be checked while castling
+                for ran in range(SIZE):
+                    for fil in range(SIZE):
+                        if fundam.PosNeg(self.board[fil][ran])==-player and (self.motionjudge(fil,ran,e-1,rank,Q) or self.motionjudge(fil,ran,d-1,rank,Q) or self.motionjudge(fil,ran,c-1,rank,Q)):
+                            logging.warning('CHECKED IN THE WAY')
+                            return False
                 logging.debug('KING K-side')
                 return True
             # all other moves are invalid
@@ -274,7 +286,7 @@ class Board:
                     for toFILE in range(SIZE):
                         for toRANK in range(SIZE):
                             # cloning board
-                            local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player)
+                            local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player, self.turn, self.s)
                             if local_board.move(frFILE, frRANK, toFILE, toRANK, Q) and local_board.checkcounter(matee) == 0:
                                 logging.info('THERE IS {}, {} -> {}, {}'.format(frFILE,frRANK,toFILE,toRANK))
                                 return False
@@ -296,7 +308,7 @@ class Board:
                 if fundam.PosNeg(self.board[frFILE][frRANK]) == matee:
                     for toFILE in range(SIZE):
                         for toRANK in range(SIZE):
-                            local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q)
+                            local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player, self.turn, self.s)
                             # in case it is not checked after moving
                             motion = local_board.move(frFILE, frRANK, toFILE, toRANK, Q)
                             count = local_board.checkcounter(matee)
@@ -403,7 +415,7 @@ class Board:
 
             # checking all the candidates
             for reference in range(len(candidates)):
-                local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player)
+                local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player, self.turn, self.s)
                 local_board.move(candidates[reference][FILE], candidates[reference][RANK], toFILE, toRANK, promote)
 
                 # capture; searching for the opponent's piece that has disappeared
@@ -515,7 +527,7 @@ class Board:
         elif self.s in ['1-0', '0-1', '1/2-1/2']:
             s_record = self.s
         # castling
-        elif self.s in ['O-O-O', 'O-O']:
+        elif self.s in ['O-O-O', 'O-O', 'o-o-o', 'o-o', '0-0-0', '0-0']:
             s_record = self.s.replace('o', 'O').replace('0', 'O')
         else:
             logging.info('OUT OF FORMAT in record')

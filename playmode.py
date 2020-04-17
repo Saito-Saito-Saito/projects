@@ -40,11 +40,10 @@ def playmode():
             logging.error('UNEXPECTED VALUE of PLAYER in while loop')
             print('SYSTEM ERROR')
             sys.exit()
-        main_board.s = input()
 
         ### INPUT ANALYSIS
         # deleting all spaces
-        main_board.s = main_board.s.replace(' ', '')
+        main_board.s = input().replace(' ', '').replace('o', 'O')
         # give up
         if main_board.s in ['X', 'x']:
             winner = -main_board.player
@@ -73,8 +72,6 @@ def playmode():
                 main_board = new_board
                 main_board.BOARDprint()
             continue
-        # format check
-        main_board.s.replace('o', 'O')
         # motion detection
         motion = main_board.s_analyze()
         # game set
@@ -132,7 +129,7 @@ def playmode():
         main_board.s = '0-1 '
         main_board.record(MAINRECADDRESS)
     else:
-        logging.error('UNEXOECTED VALUE of PLAYER out of the loop')
+        logging.error('UNEXPECTED VALUE of PLAYER out of the loop')
         print('SYSTEM ERROR')
         sys.exit()
 
