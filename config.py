@@ -3,11 +3,13 @@
 
 
 import logging
+import os
+
 logging.basicConfig(level=logging.WARNING, format='%(levelname)s - %(filename)s - L%(lineno)d - %(message)s')
 
 # records
-MAINRECADDRESS = '.\\mainrecord.txt'
-SUBRECADDRESS = '.\\subrecord.txt'
+MAINRECADDRESS = 'mainrecord.txt'
+SUBRECADDRESS = 'subrecord.txt'
 
 SIZE = 8
 OVERSIZE = SIZE * SIZE
