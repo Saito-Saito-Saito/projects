@@ -17,3 +17,14 @@ def InSize(subject):
         return True
     else:
         return False
+
+
+if __name__=="__main__":
+    try:
+        print(PosNeg(int(input('Enter a posnegee '))))
+    except:
+        print('INVALID INPUT')
+    try:
+        print(InSize(int(input('Enter an InSizee '))))
+    except:
+        print('INVALID INPUT')

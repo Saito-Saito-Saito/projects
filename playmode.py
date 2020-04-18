@@ -145,3 +145,8 @@ def playmode():
 
 
     print('\nGAME OVER\n')
+
+
+if __name__=="__main__":
+    playmode()
+    

@@ -1,12 +1,6 @@
 #! /usr/bin/env python3
-# __main__.py
+# main.py
 
-import os
-import sys
-
-from config import *
-import board
-import IO
 import playmode
 import readmode
 

@@ -49,3 +49,7 @@ def readmode():
         if input() in ['X', 'x']:
             print('QUITTED')
             return
+
+
+if __name__=="__main__":
+    readmode()

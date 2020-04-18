@@ -162,3 +162,16 @@ def instruction():
     Read the whole passage and press enter to next
     ''')
     input()
+
+
+if __name__=="__main__":
+    try:
+        print(ToggleType(input('enter a toffled str: ')))
+    except:
+        print('INVALID INPUT')
+    try:
+        print(ToggleType(int(input('Enter a toggled int: '))))
+    except:
+        print('INVALID INPUT')
+    input('ENTER TO INSTRUCT')
+    instruction()
