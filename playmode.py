@@ -1,5 +1,9 @@
 #! /usr/bin/env python3
 # playmode.py
+# programmed by Saito-Saito-Saito
+# explained on https://saito-saito-saito.github.io/chess
+# last update: 28/4/2020
+
 
 import sys
 
@@ -14,46 +18,51 @@ def playmode():
     record = open(SUBRECADDRESS, 'w')
     record.close()
 
+    # initializing the board
     main_board = board.Board()
     main_board.BOARDprint()
 
     while True:
         ### GAME SET JUDGE
+        # king captured
         if main_board.king_place(main_board.player) == False:
             winner = -main_board.player
             break
+        # checkmate
         if main_board.checkmatejudge(main_board.player):
             print('CHECKMATE')
             winner = -main_board.player
             # break
+        # stalemate
         if main_board.stalematejudge(main_board.player):
             print('STALEMATE')
-            winner = EMPTY
+            winner = EMPTY  # stalemate is draw
             break
 
-        ### INPUT
+        ### PLAYER INTRODUCTION
         if main_board.player == WHITE:
-            print('WHITE (X to givw up / H to help / Z to back) >>> ', end='')
+            print('WHITE (X to resign / H to help / Z to back) >>> ', end='')
         elif main_board.player == BLACK:
-            print('BLACK (X to givw up / H to help / Z to back) >>> ', end='')
+            print('BLACK (X to resign / H to help / Z to back) >>> ', end='')
         else:
             logging.error('UNEXPECTED VALUE of PLAYER in while loop')
             print('SYSTEM ERROR')
             sys.exit()
 
         ### INPUT ANALYSIS
-        # deleting all spaces
+        # inputting and deleting all spaces, replacing 'o' into 'O'
         main_board.s = input().replace(' ', '').replace('o', 'O')
-        # give up
+        # resign code
         if main_board.s in ['X', 'x']:
             winner = -main_board.player
             break
-        # help
+        # help code
         if main_board.s in ['H', 'h']:
             IO.instruction()
             continue
-        # back
+        # back code
         if main_board.s in ['Z', 'z']:
+            # necessary for the opponent to allow the player to back
             if main_board.player == WHITE:
                 print('Do you agree, BLACK (y/n)? >>> ', end='')
             elif main_board.player == BLACK:
@@ -61,22 +70,26 @@ def playmode():
             else:
                 logging.error('UNEXPECTED VALUE of PLAYER in the while loop')
                 sys.exit()
-            if input() not in ['y', 'Y']:
+            # in case rejected
+            if input() not in ['y', 'Y', 'Yes', 'YES', 'yes']:
                 continue
-            new_board = main_board.tracefile(
-                main_board.turn - 1, main_board.player)
+            # in case allowed
+            new_board = main_board.tracefile(main_board.turn - 1, main_board.player, True)
+            # unavailable to back
             if new_board == main_board:
                 logging.warning('IMPOSSIBLE TO BACK')
                 print('SORRY, NOW WE CANNOT BACK THE BOARD')
+            # available to back
             else:
                 main_board = new_board
                 main_board.BOARDprint()
             continue
         # motion detection
         motion = main_board.s_analyze()
-        # game set
+        # game set (resign)
         if type(motion) is int:
             if motion == EMPTY:
+                # necessary to agree to end the game
                 if main_board.player == WHITE:
                     print('Do you agree, BLACK (y/n)? >>>', end=' ')
                 elif main_board.player == BLACK:
@@ -85,9 +98,11 @@ def playmode():
                     logging.error('UNEXPECTED VALUE of PLAYER in the while loop')
                     print('SYSTEM ERROR')
                     sys.exit()
+                # when agreed
                 if input() in ['y', 'Y']:
                     winner = EMPTY
                     break
+                # when rejected
                 else:
                     continue
             elif motion == WHITE == -main_board.player:
@@ -99,7 +114,7 @@ def playmode():
             else:
                 print('IVNALID INPUT')
                 continue
-        # invalid input
+        # invalid input (here, valid motion is conducted)
         if motion == False or main_board.move(*motion) == False:
             print('INVALID INPUT/MOTION')
             continue
@@ -135,8 +150,7 @@ def playmode():
 
 
     # record output
-    print('\nDo you want the record (y/n)? >>> ', end='')
-    if input() in ['y', 'Y']:
+    if input('\nDo you want the record (y/n)? >>> ') in ['y', 'Y', 'yes', 'YES', 'Yes']:
         record = open(MAINRECADDRESS, 'r')
         print('\n------------------------------------')
         print(record.read())

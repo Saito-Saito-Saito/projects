@@ -1,8 +1,13 @@
 #! /usr/bin/env python3
 # fundam.py
+# programmed by Saito-Saito-Saito
+# explained on https://saito-saito-saito.github.io/chess
+# last update: 28/4/2020
+
 
 import config
 
+# positive or negative (returning 1, -1, or 0)
 def PosNeg(subject):
     if subject > 0:
         return 1
@@ -12,6 +17,7 @@ def PosNeg(subject):
         return 0
 
 
+# whether the index is in the board (bool)
 def InSize(subject):
     if 0 <= subject < config.SIZE:
         return True

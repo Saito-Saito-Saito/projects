@@ -1,5 +1,9 @@
 #! /usr/bin/env python3
 # IO.py
+# programmed by Saito-Saito-Saito
+# explained on https://saito-saito-saito.github.io/chess
+# last update: 28/4/2020
+
 
 from config import *
 
@@ -32,6 +36,7 @@ def ToggleType(target):
             return '♛'
         elif target == K * BLACK:
             return '♚'
+        # invalid target value
         else:
             logging.error(
                 'UNEXPECTED INPUT VALUE of A PIECE into IO.ToggleType')
@@ -39,10 +44,10 @@ def ToggleType(target):
 
     # str, chr -> int
     elif type(target) is str:
-        # a number
+        # a number -> int
         if target.isdecimal():
             return int(target)
-        # the kind of piece
+        # the kind of piece -> piece no.
         elif target == 'P':
             return P
         elif target == 'R':
@@ -58,6 +63,7 @@ def ToggleType(target):
         # file id
         elif ord('a') <= ord(target) <= ord('h'):
             return ord(target) - ord('a') + 1
+        # invalid character
         else:
             logging.error('UNEXPECTED INPUT into IO.ToggleType')
             return False
@@ -68,6 +74,7 @@ def ToggleType(target):
         return False
 
 
+# for help in the playmode
 def instruction():
     print('''
     In order to study chess properly, and also to play in leagues and tournaments, you need to be able to read and write chess moves. There are a few ways to record chess moves, but on this site we will be using standard algebraic notation, which is the notation required by FIDE (the international chess federation).
@@ -157,6 +164,7 @@ def instruction():
         !? - Interesting move.
         ?! - Dubious move.
 
+    from www.chessstrategyonline.comcontent/tutorials/basic-chess-concepts-chess-notation
 
     Did you get it?
     Read the whole passage and press enter to next
