@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 # readmode.py
 # programmed by Saito-Saito-Saito
-# explained on https://saito-saito-saito.github.io/chess
-# last update: 28/4/2020
+# explained on https://Saito-Saito-Saito.github.io/chess
+# last update: 2/7/2020
 
 
 import sys
@@ -10,7 +10,13 @@ import sys
 from config import *
 import board
 
-def readmode():
+local_logger = setLogger(__name__)
+
+
+def readmode(logger=None):
+    # logger setup
+    logger = logger or local_logger
+    
     # initializing the board
     main_board = board.Board()
     main_board.BOARDprint()
@@ -26,7 +32,7 @@ def readmode():
             print('\n{}\tBLACK'.format(main_board.turn), end='\t')
             new_board = main_board.tracefile(main_board.turn + 1, WHITE, False)
         else:
-            logging.error('UNEXPECTED VALUE of PLAYER in readmode')
+            logger.error('UNEXPECTED VALUE of PLAYER in readmode')
             print('SYSTEM ERROR')
             sys.exit()
 
@@ -46,7 +52,7 @@ def readmode():
                 print('0-1\n\nBLACK WINS')
                 return
             else:
-                logging.error('UNEXPECTED VALUE of new_board in readmode')
+                logger.error('UNEXPECTED VALUE of new_board in readmode')
                 print('SYSTEM ERROR')
                 sys.exit()
         # moving a piece

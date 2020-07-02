@@ -1,14 +1,35 @@
 #! /usr/bin/env python3
 # config.py
 # programmed by Saito-Saito-Saito
-# explained on https://saito-saito-saito.github.io/chess
-# last update: 28/4/2020
+# explained on https://Saito-Saito-Saito.github.io/chess
+# last update: 2/7/2020
 
 
 
-import logging
+from logging import getLogger, StreamHandler, FileHandler, DEBUG, INFO, WARNING, ERROR, CRITICAL, Formatter
 
-logging.basicConfig(level=logging.CRITICAL, format='%(levelname)s - %(filename)s - L%(lineno)d - %(message)s')
+
+DEFAULT_LOG_ADDRESS = 'log.txt'
+DEFAULT_FORMAT = Formatter('%(asctime)s - %(levelname)s - logger:%(name)s - %(filename)s - L%(lineno)d - %(funcName)s - %(message)s')
+
+
+def setLogger(name=__name__, *, level=DEBUG, fhandler=None, shandler=None, fhandler_level=DEBUG, shandler_level=CRITICAL, filemode='w', filename=DEFAULT_LOG_ADDRESS, fhandler_format=DEFAULT_FORMAT, shandler_format=DEFAULT_FORMAT):
+    logger = getLogger(name)
+    logger.setLevel(level)
+
+    fhandler = fhandler or FileHandler(filename, mode=filemode)
+    fhandler.setLevel(fhandler_level)
+    fhandler.setFormatter(fhandler_format)
+    logger.addHandler(fhandler)
+
+    shandler = shandler or StreamHandler()
+    shandler.setLevel(shandler_level)
+    shandler.setFormatter(shandler_format)
+    logger.addHandler(shandler)
+
+    return logger
+
+
 
 # record files
 MAINRECADDRESS = 'mainrecord.txt'

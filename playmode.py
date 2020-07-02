@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 # playmode.py
 # programmed by Saito-Saito-Saito
-# explained on https://saito-saito-saito.github.io/chess
-# last update: 28/4/2020
+# explained on https://Saito-Saito-Saito.github.io/chess
+# last update: 2/7/2020
 
 
 import sys
@@ -11,7 +11,13 @@ from config import *
 import board
 import IO
 
-def playmode():
+local_logger = setLogger(__name__)
+
+
+def playmode(logger=None):
+    # logger setup
+    logger = logger or local_logger
+    
     # new file preparation
     record = open(MAINRECADDRESS, 'w')
     record.close()
@@ -45,7 +51,7 @@ def playmode():
         elif main_board.player == BLACK:
             print('BLACK (X to resign / H to help / Z to back) >>> ', end='')
         else:
-            logging.error('UNEXPECTED VALUE of PLAYER in while loop')
+            logger.error('UNEXPECTED VALUE of PLAYER in while loop')
             print('SYSTEM ERROR')
             sys.exit()
 
@@ -68,7 +74,7 @@ def playmode():
             elif main_board.player == BLACK:
                 print('Do you agree, WHITE (y/n) >>> ', end='')
             else:
-                logging.error('UNEXPECTED VALUE of PLAYER in the while loop')
+                logger.error('UNEXPECTED VALUE of PLAYER in the while loop')
                 sys.exit()
             # in case rejected
             if input() not in ['y', 'Y', 'Yes', 'YES', 'yes']:
@@ -77,7 +83,7 @@ def playmode():
             new_board = main_board.tracefile(main_board.turn - 1, main_board.player, True)
             # unavailable to back
             if new_board == main_board:
-                logging.warning('IMPOSSIBLE TO BACK')
+                logger.warning('IMPOSSIBLE TO BACK')
                 print('SORRY, NOW WE CANNOT BACK THE BOARD')
             # available to back
             else:
@@ -95,7 +101,7 @@ def playmode():
                 elif main_board.player == BLACK:
                     print('Do you agree, WHITE (y/n)? >>>', end=' ')
                 else:
-                    logging.error('UNEXPECTED VALUE of PLAYER in the while loop')
+                    logger.error('UNEXPECTED VALUE of PLAYER in the while loop')
                     print('SYSTEM ERROR')
                     sys.exit()
                 # when agreed
@@ -144,7 +150,7 @@ def playmode():
         main_board.s = '0-1 '
         main_board.record(MAINRECADDRESS)
     else:
-        logging.error('UNEXPECTED VALUE of PLAYER out of the loop')
+        logger.error('UNEXPECTED VALUE of PLAYER out of the loop')
         print('SYSTEM ERROR')
         sys.exit()
 

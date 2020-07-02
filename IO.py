@@ -1,13 +1,19 @@
 #! /usr/bin/env python3
 # IO.py
 # programmed by Saito-Saito-Saito
-# explained on https://saito-saito-saito.github.io/chess
-# last update: 28/4/2020
+# explained on https://Saito-Saito-Saito.github.io/chess
+# last update: 2/7/2020
 
 
 from config import *
 
-def ToggleType(target):
+local_logger = setLogger(__name__)
+
+
+def ToggleType(target, logger=None):
+    # logger setup 
+    logger = logger or local_logger
+    
     # piece ID -> piece letter
     if type(target) is int:
         if target == EMPTY:
@@ -38,7 +44,7 @@ def ToggleType(target):
             return '♚'
         # invalid target value
         else:
-            logging.error(
+            logger.error(
                 'UNEXPECTED INPUT VALUE of A PIECE into IO.ToggleType')
             return False
 
@@ -65,12 +71,12 @@ def ToggleType(target):
             return ord(target) - ord('a') + 1
         # invalid character
         else:
-            logging.error('UNEXPECTED INPUT into IO.ToggleType')
+            logger.error('UNEXPECTED INPUT into IO.ToggleType')
             return False
 
     # unexpected type
     else:
-        logging.error('UNEXPECTED INPUT TYPE into IO.ToggleType')
+        logger.error('UNEXPECTED INPUT TYPE into IO.ToggleType')
         return False
 
 
