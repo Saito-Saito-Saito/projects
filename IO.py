@@ -2,7 +2,7 @@
 # IO.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last update: 2/7/2020
+# last updated: 11/7/2020
 
 
 from config import *
@@ -10,49 +10,48 @@ from config import *
 local_logger = setLogger(__name__)
 
 
-def ToggleType(target, logger=None):
-    # logger setup 
-    logger = logger or local_logger
-    
+def ToggleType(target, logger=local_logger):
     # piece ID -> piece letter
     if type(target) is int:
         if target == EMPTY:
             return ' '
-        elif target == P * WHITE:
-            return '♙'
-        elif target == R * WHITE:
-            return '♖'
-        elif target == N * WHITE:
-            return '♘'
-        elif target == B * WHITE:
-            return '♗'
-        elif target == Q * WHITE:
-            return '♕'
-        elif target == K * WHITE:
-            return '♔'
         elif target == P * BLACK:
-            return '♟'
+            return '♙'
         elif target == R * BLACK:
-            return '♜'
+            return '♖'
         elif target == N * BLACK:
-            return '♞'
+            return '♘'
         elif target == B * BLACK:
-            return '♝'
+            return '♗'
         elif target == Q * BLACK:
-            return '♛'
+            return '♕'
         elif target == K * BLACK:
+            return '♔'
+        elif target == P * WHITE:
+            return '♟'
+        elif target == R * WHITE:
+            return '♜'
+        elif target == N * WHITE:
+            return '♞'
+        elif target == B * WHITE:
+            return '♝'
+        elif target == Q * WHITE:
+            return '♛'
+        elif target == K * WHITE:
             return '♚'
         # invalid target value
         else:
-            logger.error(
-                'UNEXPECTED INPUT VALUE of A PIECE into IO.ToggleType')
+            logger.error('UNEXPECTED INPUT VALUE of A PIECE into IO.ToggleType')
             return False
 
-    # str, chr -> int
+    # str -> int
     elif type(target) is str:
-        # a number -> int
+        # a str number -> int
         if target.isdecimal():
             return int(target)
+        # file id
+        elif ord('a') <= ord(target) <= ord('h'):
+            return ord(target) - ord('a') + 1
         # the kind of piece -> piece no.
         elif target == 'P':
             return P
@@ -66,9 +65,6 @@ def ToggleType(target, logger=None):
             return Q
         elif target == 'K':
             return K
-        # file id
-        elif ord('a') <= ord(target) <= ord('h'):
-            return ord(target) - ord('a') + 1
         # invalid character
         else:
             logger.error('UNEXPECTED INPUT into IO.ToggleType')

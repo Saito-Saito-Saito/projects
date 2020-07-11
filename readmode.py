@@ -2,7 +2,7 @@
 # readmode.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last update: 2/7/2020
+# last updated: 11/7/2020
 
 
 import sys
@@ -19,7 +19,7 @@ def readmode(logger=None):
     
     # initializing the board
     main_board = board.Board()
-    main_board.BOARDprint()
+    main_board.print()
     print('ENTER TO START')
     input()
     
@@ -34,14 +34,9 @@ def readmode(logger=None):
         else:
             logger.error('UNEXPECTED VALUE of PLAYER in readmode')
             print('SYSTEM ERROR')
-            sys.exit()
+            sys.exit('SYSTEM ERROR')
 
-        # unavailable to trace
-        if type(new_board) is bool:
-            print('NO WAY TO CONTINUE')
-            return
-        # game set
-        elif type(new_board) is int:
+        if type(new_board) is int:
             if new_board == EMPTY:
                 print('1/2-1/2\n\nDRAW')
                 return
@@ -54,12 +49,12 @@ def readmode(logger=None):
             else:
                 logger.error('UNEXPECTED VALUE of new_board in readmode')
                 print('SYSTEM ERROR')
-                sys.exit()
+                sys.exit('SYSTEM ERROR')
         # moving a piece
         else:
             main_board = new_board
             print(main_board.s)
-            main_board.BOARDprint()
+            main_board.print(turnmode=True, reverse=True)
 
         # exit code
         print('ENTER TO NEXT / X TO QUIT ', end='')

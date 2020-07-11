@@ -2,7 +2,7 @@
 # playmode.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last update: 2/7/2020
+# last updated: 11/7/2020
 
 
 import sys
@@ -26,7 +26,7 @@ def playmode(logger=None):
 
     # initializing the board
     main_board = board.Board()
-    main_board.BOARDprint()
+    main_board.print()
 
     while True:
         ### GAME SET JUDGE
@@ -53,7 +53,7 @@ def playmode(logger=None):
         else:
             logger.error('UNEXPECTED VALUE of PLAYER in while loop')
             print('SYSTEM ERROR')
-            sys.exit()
+            sys.exit('SYSTEM ERROR')
 
         ### INPUT ANALYSIS
         # inputting and deleting all spaces, replacing 'o' into 'O'
@@ -75,12 +75,12 @@ def playmode(logger=None):
                 print('Do you agree, WHITE (y/n) >>> ', end='')
             else:
                 logger.error('UNEXPECTED VALUE of PLAYER in the while loop')
-                sys.exit()
+                sys.exit('SYSTEM ERROR')
             # in case rejected
             if input() not in ['y', 'Y', 'Yes', 'YES', 'yes']:
                 continue
             # in case allowed
-            new_board = main_board.tracefile(main_board.turn - 1, main_board.player, True)
+            new_board = main_board.tracefile(main_board.turn - 1, main_board.player, isrecwrite=True)
             # unavailable to back
             if new_board == main_board:
                 logger.warning('IMPOSSIBLE TO BACK')
@@ -88,7 +88,7 @@ def playmode(logger=None):
             # available to back
             else:
                 main_board = new_board
-                main_board.BOARDprint()
+                main_board.print()
             continue
         # motion detection
         motion = main_board.s_analyze()
@@ -103,7 +103,7 @@ def playmode(logger=None):
                 else:
                     logger.error('UNEXPECTED VALUE of PLAYER in the while loop')
                     print('SYSTEM ERROR')
-                    sys.exit()
+                    sys.exit('SYSTEM ERROR')
                 # when agreed
                 if input() in ['y', 'Y']:
                     winner = EMPTY
@@ -125,17 +125,24 @@ def playmode(logger=None):
             print('INVALID INPUT/MOTION')
             continue
 
-        # board output
-        main_board.BOARDprint()
-
         # recording the move
         main_board.record(MAINRECADDRESS)
+
+        # turn count
+        if main_board.player == BLACK:
+            main_board.turn += 1
+
+        # player change
+        main_board.player *= -1
+        
+        # board output
+        main_board.print()
+
 
 
     print('\nGAME SET')
     if winner == EMPTY:
         # for record
-        main_board.player *= -1
         print('1/2 - 1/2\tDRAW')
         main_board.s = '1/2-1/2 '
         main_board.record(MAINRECADDRESS)
@@ -152,7 +159,7 @@ def playmode(logger=None):
     else:
         logger.error('UNEXPECTED VALUE of PLAYER out of the loop')
         print('SYSTEM ERROR')
-        sys.exit()
+        sys.exit('SYSTEM ERROR')
 
 
     # record output
@@ -167,6 +174,6 @@ def playmode(logger=None):
     print('\nGAME OVER\n')
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     playmode()
     

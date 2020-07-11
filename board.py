@@ -2,7 +2,7 @@
 # board.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last update: 2/7/2020
+# last updated: 11/7/2020
 
 
 import copy
@@ -19,10 +19,10 @@ local_logger = setLogger(__name__)
 
 
 class Board:    
-    def __init__(self, input_board=[], input_taget=[OVERSIZE, OVERSIZE], input_k=[WHITE, BLACK], input_q=[WHITE, BLACK], input_player=WHITE, input_turn=1, input_s='', logger=None):
+    def __init__(self, *, board=[], target=[OVERSIZE, OVERSIZE], castl_k=[WHITE, BLACK], castl_q=[WHITE, BLACK], player=WHITE, turn=1, s='', logger=local_logger):
         # NOTE: when copying any list, you have to use copy.deepcopy
-        if len(input_board) == SIZE:
-            self.board = copy.deepcopy(input_board)
+        if len(board) == SIZE:
+            self.board = copy.deepcopy(board)
         else:
             # [0][0] is white's R, [0][1] is white's P, ...
             self.board = [
@@ -35,26 +35,40 @@ class Board:
                 [N, P, 0, 0, 0, 0, -P, -N],
                 [R, P, 0, 0, 0, 0, -P, -R]
             ]
-        self.ep_target = copy.deepcopy(input_taget) # for en passan
-        self.castl_k = copy.deepcopy(input_k)   # for castling
-        self.castl_q = copy.deepcopy(input_q)   # for castling
-        self.turn = input_turn  # starts from 1
-        self.player = input_player
-        self.s = input_s
-        self.logger = logger or local_logger
+        self.ep_target = copy.deepcopy(target) # for en passan
+        self.castl_k = copy.deepcopy(castl_k)   # for castling
+        self.castl_q = copy.deepcopy(castl_q)   # for castling
+        self.turn = turn  # starts from 1
+        self.player = player
+        self.s = s
+        self.logger = logger
                         
 
-    def BOARDprint(self):
+    def print(self, *, turnmode=True, reverse=False):
+        # cf. boardprint.py
+        start = [SIZE - 1, 0]  # WHITESIDE: start[0] BLACKSIDE: start[1]
+        stop = [-1, SIZE]  # WHITESIDE: stop[0] BLACKSIDE: stop[1]
+        step = [-1, +1] # WHITESIDE: step[0] BLACKSIDE: step[1]
+        switch = bool(turnmode and (self.player == BLACK))
+        if reverse:
+            switch = not switch
+            
         print('\n')
-        print('\t    a   b   c   d   e   f   g   h')
+        if switch:
+            print('\t    h   g   f   e   d   c   b   a')
+        else:
+            print('\t    a   b   c   d   e   f   g   h')
         print('\t   -------------------------------')
-        for rank in range(SIZE - 1, -1, -1):    # down to less
+        for rank in range(start[switch], stop[switch], step[switch]):    # down to less
             print('\t{} |'.format(rank + 1), end='')
-            for file in range(SIZE):
+            for file in range(start[not switch], stop[not switch], step[not switch]):
                 print(' {} |'.format(IO.ToggleType(self.board[file][rank])), end='')
             print(' {}'.format(rank + 1))
             print('\t   -------------------------------')
-        print('\t    a   b   c   d   e   f   g   h')
+        if switch:
+            print('\t    h   g   f   e   d   c   b   a')
+        else:
+            print('\t    a   b   c   d   e   f   g   h')
         print('\n')
     
 
@@ -140,9 +154,9 @@ class Board:
         elif piece == KING:
             # normal motion (one step)
             if abs(toFILE - frFILE) <= 1 and abs(toRANK - frRANK) <= 1:
-                logger.info('KING NORMAL')
+                logger.debug('KING NORMAL')
                 return True
-            # preparinf for castling; setting rank
+            # preparing for castling; setting rank
             if player == WHITE:
                 rank = 1 - 1
             elif player == BLACK:
@@ -150,13 +164,13 @@ class Board:
             else:
                 logger.error('UNEXPECTED PLAYER VALUE in motionjudge')
                 print('SYSTEM ERROR')
-                sys.exit()
+                sys.exit('SYSTEM ERROR')
             # Q-side; adequate fr and to, all passing squares are EMPTY
             if player in self.castl_q and frFILE == e - 1 and frRANK == rank and toFILE == c - 1 and toRANK == rank and self.board[b - 1][rank] == self.board[c - 1][rank] == self.board[d - 1][rank] == EMPTY:
                 # K must not be checked while castling
                 for ran in range(SIZE):
                     for fil in range(SIZE):
-                        if fundam.PosNeg(self.board[fil][ran])==-player and (self.motionjudge(fil,ran,e-1,rank,Q) or self.motionjudge(fil,ran,d-1,rank,Q) or self.motionjudge(fil,ran,c-1,rank,Q)):
+                        if fundam.PosNeg(self.board[fil][ran]) == -player and (self.motionjudge(fil, ran, e - 1, rank, Q) or self.motionjudge(fil, ran, d - 1, rank, Q) or self.motionjudge(fil, ran, c - 1, rank, Q)):
                             logger.info('CHECKED IN THE WAY')
                             return False
                 logger.debug('KING Q-side')
@@ -166,7 +180,7 @@ class Board:
                 # K must be checked while castling
                 for ran in range(SIZE):
                     for fil in range(SIZE):
-                        if fundam.PosNeg(self.board[fil][ran])==-player and (self.motionjudge(fil,ran,e-1,rank,Q) or self.motionjudge(fil,ran,d-1,rank,Q) or self.motionjudge(fil,ran,c-1,rank,Q)):
+                        if fundam.PosNeg(self.board[fil][ran]) == -player and (self.motionjudge(fil, ran, e - 1, rank, Q) or self.motionjudge(fil, ran, d - 1, rank, Q) or self.motionjudge(fil, ran, c - 1, rank, Q)):
                             logger.info('CHECKED IN THE WAY')
                             return False
                 logger.debug('KING K-side')
@@ -179,7 +193,7 @@ class Board:
         else:
             logger.error('UNEXPECTED VALUE of PIECE in motionjudge')
             print('SYSTEM ERROR')
-            sys.exit()
+            sys.exit('SYSTEM ERROR')
 
         # whether there is an obstacle in the wauy of R/B/Q
         direction = [fundam.PosNeg(toFILE - frFILE), fundam.PosNeg(toRANK - frRANK)]
@@ -187,6 +201,7 @@ class Board:
         while focused[FILE] != toFILE or focused[RANK] != toRANK:   # while not reaching TO
             # out of the board
             if not (fundam.InSize(focused[0]) and fundam.InSize(focused[1])):
+                logger.warning('')
                 break
             # if there is a piece on the way
             if self.board[focused[FILE]][focused[RANK]] != EMPTY:
@@ -208,7 +223,8 @@ class Board:
             return False
         
         ### NOT OWN PIECE
-        if fundam.PosNeg(self.board[frFILE][frRANK])!=self.player:
+        if fundam.PosNeg(self.board[frFILE][frRANK]) != self.player:
+            logger.debug('MOVING OPPONENT PIECE OR EMPTY')
             return False
 
         piece = abs(self.board[frFILE][frRANK])
@@ -224,7 +240,7 @@ class Board:
             else:
                 logger.error('UNEXPECTED VALUE of PLAYER in move')
                 print('SYSTEM ERROR')
-                sys.exit()
+                sys.exit('SYSTEM ERROR')
             # moving rook
             if toFILE == c - 1:
                 self.board[d - 1][rank] = self.player * ROOK
@@ -259,13 +275,9 @@ class Board:
         # for castling k-side
         if self.player in self.castl_k and (piece == KING or (piece == ROOK and frFILE == h - 1)):
             self.castl_k.remove(self.player)
-        # turn count
-        if self.player == BLACK:
-            self.turn += 1
-        # player change
-        self.player *= -1
         
         ### RETURN AS SUCCEEDED
+        logger.info('SUCCESSFULLY MOVED')
         return True
 
 
@@ -289,7 +301,7 @@ class Board:
             toFILE = TO[FILE]
             toRANK = TO[RANK]
         except:
-            logger.debug('THERE IS NO KING')
+            logger.info('THERE IS NO KING ON THE BOARD')
             return False
 
         # searching all the squares, count up the checking pieces
@@ -310,6 +322,7 @@ class Board:
         
         # if not checked, it's not checkmate
         if self.checkcounter(matee) in [False, 0]:
+            logger.debug('NOT CHECKED')
             return False
         
         # searching all the moves matee can
@@ -320,12 +333,12 @@ class Board:
                     for toFILE in range(SIZE):
                         for toRANK in range(SIZE):
                             # cloning board
-                            local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player, self.turn, self.s)
+                            local_board = Board(board=self.board, target=self.ep_target, castl_k=self.castl_k, castl_q=self.castl_q, player=matee)
                             # moving the local board and count up check
                             if local_board.move(frFILE, frRANK, toFILE, toRANK, Q) and local_board.checkcounter(matee) == 0:
                                 logger.info('THERE IS {}, {} -> {}, {}'.format(frFILE,frRANK,toFILE,toRANK))
                                 return False
-                    logger.info('"FR = {}, {}" was unavailable'.format(frFILE, frRANK))
+                    logger.debug('"FR = {}, {}" was unavailable'.format(frFILE, frRANK))
 
         # completing the loop, there is no way to flee
         return True
@@ -340,23 +353,22 @@ class Board:
             logger.debug('CHECKED')
             return False
 
-        # searching all the moves for one that can move without being checked
+        # searching all the moves matee can
         for frFILE in range(SIZE):
             for frRANK in range(SIZE):
                 if fundam.PosNeg(self.board[frFILE][frRANK]) == matee:
                     # searching all TO the piece can reach
                     for toFILE in range(SIZE):
                         for toRANK in range(SIZE):
-                            # copying the board
-                            local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player, self.turn, self.s)
-                            motion = local_board.move(frFILE, frRANK, toFILE, toRANK, Q)
-                            count = local_board.checkcounter(matee)
-                            logger.debug('motion: {}, count: {}'.format(motion, count))
-                            # in case it is not checked after moving
-                            if motion and count in [0, False]:
-                                logger.info('THERE IS {}, {} -> {}, {}'.format(frFILE, frRANK, toFILE, toRANK))
+                            # cloning board
+                            local_board = Board(board=self.board, target=self.ep_target, castl_k=self.castl_k, castl_q=self.castl_q, player=matee)
+                            # moving the local board and count up check
+                            if local_board.move(frFILE, frRANK, toFILE, toRANK, Q) and local_board.checkcounter(matee) == 0:
+                                logger.info('THERE IS {}, {} -> {}, {}'.format(frFILE,frRANK,toFILE,toRANK))
                                 return False
+                    logger.debug('"FR = {}, {}" was unavailable'.format(frFILE, frRANK))
         # completing the loop, there is no way to avoid check when moving
+        logger.info('STALEMATE. {} cannot move'.format(self.player))
         return True
     
 
@@ -365,18 +377,12 @@ class Board:
         logger = logger or self.logger
         
         # removing spaces
-        self.s = self.s.replace(' ', '')
+        self.s = self.s.replace(' ', '').replace('!', '').replace('?', '')
 
         # avoiding bugs
         if len(self.s) == 0:
             logger.debug('len(s) == 0')
             return False
-
-        # deleting all of !? at the tail
-        while self.s[-1] in ['!', '?']:
-            self.s = self.s.rstrip(self.s[-1])
-            if len(self.s) == 0:
-                return False
 
         # the pattern of the normal format
         match = re.match(r'^[PRNBQK]?[a-h]?[1-8]?[x]?[a-h][1-8](=[RNBQ]|e.p.)?[\++#]?$', self.s)
@@ -389,7 +395,8 @@ class Board:
             # what piece is moving
             if line[0] in ['P', 'R', 'N', 'B', 'Q', 'K']:
                 piece = IO.ToggleType(line[0])
-                line = line.lstrip(line[0])
+                # deleting the info of piece because we do not use it any more
+                line = line.lstrip(line[0]) 
             else:
                 piece = PAWN
             logger.info('PIECE == {}'.format(piece))
@@ -457,7 +464,7 @@ class Board:
             # checking all the candidates
             for reference in range(len(candidates)):
                 # copying and moving the board
-                local_board = Board(self.board, self.ep_target, self.castl_k, self.castl_q, self.player, self.turn, self.s, logger=None)
+                local_board = Board(board=self.board, target=self.ep_target, castl_k=self.castl_k, castl_q=self.castl_q, player=self.player, turn=self.turn, s=self.s)
                 local_board.move(candidates[reference][FILE], candidates[reference][RANK], toFILE, toRANK, promote)
 
                 # capture; searching for the opponent's piece that has disappeared
@@ -501,11 +508,11 @@ class Board:
 
             # normal return
             if len(candidates) == 1:
-                logger.info('NORMALLY RETURNED from s_analyze')
+                logger.info('NORMALLY RETURNED')
                 return [candidates[0][FILE], candidates[0][RANK], toFILE, toRANK, promote]
             # when some candidates are available
             elif len(candidates) > 1:
-                logger.info('THERE IS ANOTHER MOVE')
+                logger.warning('THERE IS ANOTHER MOVE')
                 return [candidates[0][FILE], candidates[0][RANK], toFILE, toRANK, promote]
             # no candidates are available
             else:
@@ -534,7 +541,7 @@ class Board:
             else:
                 logger.error('UNEXPECTED PLAYER VALUE in s_analyze')
                 print('SYSTEM ERROR')
-                sys.exit()
+                sys.exit('SYSTEM ERROR')
             # Q-side
             if self.s in ['O-O-O', 'o-o-o', '0-0-0'] and self.board[e - 1][rank] == self.player * KING:
                 logger.info('format is {}, castl is {}'.format(self.s, self.castl_q))
@@ -554,23 +561,17 @@ class Board:
         # logger setup
         logger = logger or self.logger
         
-        # removing spaces
-        self.s = self.s.replace(' ', '')
+        # removing spaces, !, ?
+        self.s = self.s.replace(' ', '').replace('!', '').replace('?', '')
 
         # avoiding bugs
         if len(self.s) == 0:
             logger.debug('len(s) == 0')
             return False
 
-        # deleting all of !? at the tail
-        while self.s[-1] in ['!', '?']:
-            self.s = self.s.rstrip(self.s[-1])
-            if len(self.s) == 0:
-                return False
-
         # normal pattern
-        match = re.match(r'^[PRNBQK]?[a-h]?[1-8]?[x]?[a-h][1-8](=[RNBQ]|e.p.)?[\+#]?$', self.s)
-        # normal pattern matches
+        match = re.match(r'^[PRNBQK]?[a-h]?[1-8]?[x]?[a-h][1-8](=[RNBQ]|e.p.)?[\++#]?$', self.s)
+        # normal pattern matched
         if match:
             s_record = match.group()
         # resign
@@ -593,17 +594,16 @@ class Board:
         # BLACK WINS (WHITE DIDN'T MOVE)
         elif s_record == '0-1':
             f.write('{}\t0-1'.format(self.turn))
-        # NOTE: after Board.move, parameter player is changed
         # writing on WHITE side
-        elif -self.player == WHITE:
+        elif self.player == WHITE:
             f.write('{}\t'.format(self.turn) + s_record.ljust(12))
         # writing on BLACK side
-        elif -self.player == BLACK:
+        elif self.player == BLACK:
             f.write(s_record.ljust(12) + '\n')
         else:
             logger.error('UNEXPECTED VALUE of PLAYER in record')
             print('SYSTEM ERROR')
-            sys.exit()
+            sys.exit('SYSTEM ERROR')
         
         f.close()
 
@@ -625,9 +625,10 @@ class Board:
         # reading the main file
         f = open(MAINRECADDRESS, 'r')
         # deleting first and last spaces
-        line = f.read().strip(' ').strip('\n')
+        line = f.read()
+        line = line.strip()
         f.close()
-        logger.info('line is {}'.format(line))
+        logger.info('line is "{}"'.format(line))
 
         # local Board
         local_board = Board()
@@ -635,13 +636,16 @@ class Board:
         # detectong each letter in line
         for letter in line:
             # when you come to the end of a sentence
-            if letter in [' ', '\t', '\n', ',']:
+            if letter in [' ', '\t', '\n', ',', '.']:
                 logger.info('local_s is {}'.format(local_board.s))
                 motion = local_board.s_analyze()
                 # normal motion
                 if type(motion) is list:
                     local_board.move(*motion)
-                    local_board.record(SUBRECADDRESS)   # all the local moves are recorded on the sub file
+                    local_board.record(SUBRECADDRESS)  # all the local moves are recorded on the sub file
+                    if local_board.player == BLACK:
+                        local_board.turn += 1
+                    local_board.player *= -1
                     # destination
                     if local_board.turn == destination_turn and local_board.player == destination_player:
                         logger.info('trace succeeded')
@@ -669,7 +673,7 @@ class Board:
             # the sentence does not end yet
             else:
                 local_board.s = ''.join([local_board.s, letter])
-                logger.info('local_s = {}'.format(local_board.s))
+                logger.debug('local_s = {}'.format(local_board.s))
 
         # last one local_s; the same as in the for loop
         logger.info('local_s is {}'.format(local_board.s))
@@ -677,6 +681,10 @@ class Board:
         if type(motion) is list:
             local_board.move(*motion)
             local_board.record(SUBRECADDRESS)
+            if local_board.player == BLACK:
+                local_board.turn += 1
+            local_board.player *= -1
+            # reaching destination
             if local_board.turn == destination_turn and local_board.player == destination_player:
                 logger.info('trace succeeded')
                 if isrecwrite:
@@ -699,3 +707,15 @@ class Board:
         logger.warning('FAILED TO BACK')
         return self
 
+
+if __name__ == "__main__":
+    local_board = Board()
+    local_board.print()
+    local_board.move(c - 1, 2 - 1, c - 1, 4 - 1)
+    local_board.player *= -1
+    local_board.print(turnmode=True)
+    local_board.move(c - 1, 7 - 1, c - 1, 6 - 1)
+    local_board.player *= -1
+    local_board.print(turnmode=True)
+    print(local_board.king_place(WHITE))
+    print(local_board.king_place(BLACK))
