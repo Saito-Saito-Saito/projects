@@ -2,7 +2,7 @@
 # print.py
 # coded by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last updated: 11/7/2020
+# last updated: 15 August 2020
 # NOTE: This code is only for explaining, so is not neccessary to run.
 
 from board import *

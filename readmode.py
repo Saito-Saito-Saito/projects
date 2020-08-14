@@ -2,7 +2,7 @@
 # readmode.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last updated: 11/7/2020
+# last updated: 15 August 2020
 
 
 import sys
@@ -13,7 +13,7 @@ import board
 local_logger = setLogger(__name__)
 
 
-def readmode(logger=None):
+def readmode(turnmode=False, reverse=False, logger=None):
     # logger setup
     logger = logger or local_logger
     
@@ -54,7 +54,7 @@ def readmode(logger=None):
         else:
             main_board = new_board
             print(main_board.s)
-            main_board.print(turnmode=True, reverse=True)
+            main_board.print(turnmode=turnmode, reverse=reverse)
 
         # exit code
         print('ENTER TO NEXT / X TO QUIT ', end='')

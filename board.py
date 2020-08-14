@@ -2,7 +2,7 @@
 # board.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last updated: 11/7/2020
+# last updated: 15 August 2020
 
 
 import copy
@@ -84,7 +84,7 @@ class Board:
         player = fundam.PosNeg(self.board[frFILE][frRANK])
         piece = abs(self.board[frFILE][frRANK])
         
-        # moving to the square where there is  own piece
+        # moving to the square where there is own piece
         if fundam.PosNeg(self.board[toFILE][toRANK]) == player:
             logger.debug('MOVING TO OWN SQUARE')
             return False
@@ -254,7 +254,7 @@ class Board:
         # en passant; pawn moves diagonal and TO is EMPTY
         if piece == PAWN and frFILE != toFILE and self.board[toFILE][toRANK] == EMPTY:
             # capturing opponent's pawn
-            self.board[self.ep_target[FILE]][self.ep_target[RANK]] = EMPTY        
+            self.board[self.ep_target[FILE]][self.ep_target[RANK]] = EMPTY
         # promotion; changing the moving piece into promote
         if piece == PAWN and (toRANK == 8 - 1 or toRANK == 1 - 1):
             self.board[frFILE][frRANK] = self.player * promote
@@ -286,9 +286,8 @@ class Board:
         for fil in range(SIZE):
             if searcher * KING in self.board[fil]:
                 return [fil, self.board[fil].index(searcher * KING)]
-        else:
-            # there is no king
-            return EMPTY
+        # there is no king
+        return EMPTY
             
 
     def checkcounter(self, checkee, logger=None):

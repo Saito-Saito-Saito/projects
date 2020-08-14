@@ -2,13 +2,14 @@
 # config.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last updated: 11/7/2020
+# last updated: 15 August 2020
 
 
 
 from logging import getLogger, StreamHandler, FileHandler, DEBUG, INFO, WARNING, ERROR, CRITICAL, Formatter
 
 
+### LOGGER SETTNGS
 DEFAULT_LOG_ADDRESS = 'log.txt'
 DEFAULT_FORMAT = Formatter('%(asctime)s - %(levelname)s - logger:%(name)s - %(filename)s - L%(lineno)d - %(funcName)s - %(message)s')
 
