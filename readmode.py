@@ -2,7 +2,7 @@
 # readmode.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last updated: 15 August 2020
+# last updated: 16 August 2020
 
 
 import sys
@@ -14,7 +14,7 @@ local_logger = setLogger(__name__)
 
 
 def readmode(turnmode=False, reverse=False, logger=None):
-    # logger setup
+    ### LOGGER SETTING
     logger = logger or local_logger
     
     # initializing the board
@@ -24,7 +24,7 @@ def readmode(turnmode=False, reverse=False, logger=None):
     input()
     
     while True:
-        # displaying turn number and player
+        ### DISPLAYING TURN NO. AND PLAYER
         if main_board.player == WHITE:
             print('\n{}\tWHITE'.format(main_board.turn), end='\t')
             new_board = main_board.tracefile(main_board.turn, BLACK, False)
@@ -36,6 +36,7 @@ def readmode(turnmode=False, reverse=False, logger=None):
             print('SYSTEM ERROR')
             sys.exit('SYSTEM ERROR')
 
+        ### DISPLAYING THE RESULT
         if type(new_board) is int:
             if new_board == EMPTY:
                 print('1/2-1/2\n\nDRAW')
@@ -56,7 +57,7 @@ def readmode(turnmode=False, reverse=False, logger=None):
             print(main_board.s)
             main_board.print(turnmode=turnmode, reverse=reverse)
 
-        # exit code
+        ### EXIT CODE
         print('ENTER TO NEXT / X TO QUIT ', end='')
         if input() in ['X', 'x']:
             print('QUITTED')

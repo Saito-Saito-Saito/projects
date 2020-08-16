@@ -2,7 +2,7 @@
 # config.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last updated: 15 August 2020
+# last updated: 16 August 2020
 
 
 
@@ -46,9 +46,11 @@ FILE = 0
 RANK = 1
 a, b, c, d, e, f, g, h = 1, 2, 3, 4, 5, 6, 7, 8
 
+# player No.
 WHITE = 1
 BLACK = -1
 
+# piece No.
 EMPTY = 0
 P = PAWN = 1
 R = ROOK = 2

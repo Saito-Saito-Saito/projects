@@ -2,7 +2,7 @@
 # IO.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last updated: 15 August 2020
+# last updated: 16 August 2020
 
 
 from config import *
@@ -11,7 +11,7 @@ local_logger = setLogger(__name__)
 
 
 def ToggleType(target, logger=local_logger):
-    # piece ID -> piece letter
+    ### PIECE ID -> PIECE LETTER
     if type(target) is int:
         if target == EMPTY:
             return ' '

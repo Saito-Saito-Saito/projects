@@ -2,7 +2,7 @@
 # fundam.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last updated: 15 August 2020
+# last updated: 16 August 2020
 
 
 import config

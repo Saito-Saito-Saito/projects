@@ -2,7 +2,7 @@
 # playmode.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last updated: 15 August 2020
+# last updated: 16 August 2020
 
 
 import sys
@@ -15,10 +15,11 @@ local_logger = setLogger(__name__)
 
 
 def playmode(turnmode=True, logger=None):
-    # logger setup
+    ### LOGGER SETTING
     logger = logger or local_logger
     
-    # new file preparation
+    ### INITIALIZATION
+    # files preparing
     record = open(MAINRECADDRESS, 'w')
     record.close()
     record = open(SUBRECADDRESS, 'w')
@@ -27,6 +28,7 @@ def playmode(turnmode=True, logger=None):
     # initializing the board
     main_board = board.Board()
     main_board.print(turnmode=turnmode)
+
 
     while True:
         ### GAME SET JUDGE
@@ -45,6 +47,7 @@ def playmode(turnmode=True, logger=None):
             winner = EMPTY  # stalemate is draw
             break
 
+
         ### PLAYER INTRODUCTION
         if main_board.player == WHITE:
             print('WHITE (X to resign / H to help / Z to back) >>> ', end='')
@@ -54,6 +57,7 @@ def playmode(turnmode=True, logger=None):
             logger.error('UNEXPECTED VALUE of PLAYER in while loop')
             print('SYSTEM ERROR')
             sys.exit('SYSTEM ERROR')
+
 
         ### INPUT ANALYSIS
         # inputting and deleting all spaces, replacing 'o' into 'O'
@@ -130,6 +134,7 @@ def playmode(turnmode=True, logger=None):
         # recording the move
         main_board.record(MAINRECADDRESS)
 
+        ### PARAMETERS MANIPULATION
         # turn count
         if main_board.player == BLACK:
             main_board.turn += 1
