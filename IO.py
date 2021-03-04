@@ -2,7 +2,7 @@
 # IO.py
 # programmed by Saito-Saito-Saito
 # explained on https://Saito-Saito-Saito.github.io/chess
-# last updated: 16 August 2020
+# last updated: 04 March 2021
 
 
 from config import *
@@ -11,7 +11,7 @@ local_logger = setLogger(__name__)
 
 
 def ToggleType(target, logger=local_logger):
-    ### PIECE ID -> PIECE LETTER
+    # piece ID -> piece letter
     if type(target) is int:
         if target == EMPTY:
             return ' '
@@ -50,7 +50,7 @@ def ToggleType(target, logger=local_logger):
         if target.isdecimal():
             return int(target)
         # file id
-        elif ord('a') <= ord(target) <= ord('h'):
+        elif ord('a') &lt;= ord(target) &lt;= ord('h'):
             return ord(target) - ord('a') + 1
         # the kind of piece -> piece no.
         elif target == 'P':
@@ -79,94 +79,113 @@ def ToggleType(target, logger=local_logger):
 # for help in the playmode
 def instruction():
     print('''
-    In order to study chess properly, and also to play in leagues and tournaments, you need to be able to read and write chess moves. There are a few ways to record chess moves, but on this site we will be using standard algebraic notation, which is the notation required by FIDE (the international chess federation).
+    棋譜の書き方には何通りかありますが、ここでは FIDE (The International Chess Federalation) 公認の standard algebraic notation と呼ばれる記法を使用します。
+                
+-- 盤面
+盤上のマスを一つに絞るのに、数学でやるような「座標」を活用します。横長の行 (rank) は白番から見て下から順に 1, 2, ..., 8 と数え、縦長の列 (file) は白番から見て左から順に a, b, ..., h と番号を振ります。
+                
+    a   b   c   d   e   f   g   h
+   -------------------------------
+8 | a8| b8| c8| d8| e8| f8| g8| h8| 8
+   -------------------------------
+7 | a7| b7| c7| d7| e7| f7| g7| h7| 7
+   -------------------------------
+6 | a6| b6| c6| d6| e6| f6| g6| h6| 6
+   -------------------------------
+5 | a5| b5| c5| d5| e5| f5| g5| h5| 5
+   -------------------------------
+4 | a4| b4| c4| d4| e4| f4| g4| h4| 4
+   -------------------------------
+3 | a3| b3| c3| d3| e3| f3| g3| h3| 3
+   -------------------------------
+2 | a2| b2| c2| d2| e2| f2| g2| h2| 2
+   -------------------------------
+1 | a1| b1| c1| d1| e1| f1| g1| h1| 1
+   -------------------------------
+    a   b   c   d   e   f   g   h
+                
+黒番からみる場合にはこれが 180º 開店した形になります。
 
-    -- The board
-    In algebraic notation, we use a system of alphanumeric co-ordinates to identify each square. The ranks (horizontal rows) are identified with numbers starting from white's side of the board, and the files (vertical columns) are identified by letters, starting from white's left. On the board below, co-ordinates are displayed for every square.
 
-            a   b   c   d   e   f   g   h
-           -------------------------------
-        8 | a8| b8| c8| d8| e8| f8| g8| h8| 8
-           -------------------------------
-        7 | a7| b7| c7| d7| e7| f7| g7| h7| 7
-           -------------------------------
-        6 | a6| b6| c6| d6| e6| f6| g6| h6| 6
-           -------------------------------
-        5 | a5| b5| c5| d5| e5| f5| g5| h5| 5
-           -------------------------------
-        4 | a4| b4| c4| d4| e4| f4| g4| h4| 4
-           -------------------------------
-        3 | a3| b3| c3| d3| e3| f3| g3| h3| 3
-           -------------------------------
-        2 | a2| b2| c2| d2| e2| f2| g2| h2| 2
-           -------------------------------
-        1 | a1| b1| c1| d1| e1| f1| g1| h1| 1
-           -------------------------------
-            a   b   c   d   e   f   g   h
+-- 駒の動き
+各駒の名前は表のように割り振っていきます。
 
-    The co-ordinates are the same whether you are looking at the board from white's perspective or black's.
+    P - ポーン
+    R - ルーク
+    N - ナイト
+    B - ビショップ
+    Q - クイーン
+    K - キング
 
-    -- Recording a move
-    With the exception of the knight, each piece is represented by the first letter of its name, capitalised. Knight starts with the same letter as king, so for the knights we use the letter N instead. When we record a move, we record the piece that is being moved, and the square that the piece is being moved to. For example:
+まず駒の名前を書いて、その後にどのマスへ移動したかを記録します。
 
-        Bc4 - Bishop moves to the c4 square.
-        Nf3 - Knight moves to the f3 square.
-        Qc7 - Queen moves to the c7 square.
+例）
+    Bc4 - ビショップが c4 のマスに動いた
+    Nf3 - ナイトが f3 のマスに動いた
+    Qc7 - クイーンが c7 のマスに動いた
+
+ポーンはしょっちゅう動かすので、棋譜を書くときは基本的に省略します。
+
+例）
+    e4 - ポーンが e4 のマスに動いた
+    g6 - ポーンが g6 のマスに動いた
     
-    The only exception to this is pawn moves. When a pawn moves, we don't normally bother to record the P, just the square that the pawn is moving to. For example:
+ポーンが盤面の端まできてプロモーションしたときは、マスを表す2文字に続けて = (成り上がった後の駒の名前) の形で表します。
 
-        e4 - pawn moves to the e4 square.
-        g6 - pawn moves to the g6 square.
+例）
+    b8=Q - ポーンが b8 にきてクイーンにプロモーションした
+    h1=N - ポーンが h1 にきてナイトにプロモーションした
+
+相手の駒を取ったときは x を駒の名前と行き先のマスの間に入れて駒を取ったことを明示します。
+
+例）
+    Rxf5 - ルークが相手の駒をとって f5 のマスに移動した
+    Kxd2 - キングが相手の駒をとって d2 のマスに移動した
+
+ポーンが相手の駒を取ったときは、ポーンが元々いた列 (file) を表すアルファベットを先頭につけ、続けて x を、さらに移動先のマスを並べます。
+
+例）
+    gxf6 - g 列のポーンが相手の駒を取って f6 のマスに移動した
+    exd5 - e 列のポーンが相手の駒を取って d5 のマスに移動した
+
+ポーンがアンパッサンして相手の駒を取った場合、駒を取ったポーンの移動先を記録します。アンパッサンしたことを明示するために 'e.p.' をつけたりもしますが、必ずつけなければいけないものではありません。
+
+例）
+    exd6 - ポーンがアンパッサンして d5 にある相手のポーンをとり d6 のマスへ移動した
+    gxh6 e.p. - ポーンがアンパッサンして h5 にある相手のポーンをとり h6 のマスへ移動した
     
-    If the pawn has reached the far side of the board and promoted, use an '=' sign to show which piece it was promoted to. For example:
+駒を動かして相手にチェックをかけたときは、後ろに + をつけます。ダブルチェックの場合は ++ とする流儀もありますが、1つでも十分です。チェックメイトのときは後ろに # をつけます。
 
-        b8=Q - pawn moves to the b8 square and promotes to a queen.
-        h1=N - pawn moves to the h1 square and promotes to a knight.
+例）
+    Ba3+ - ビショップが a3 のマスに移動してチェックとなった
+    Qxh7# - クイーンが相手の駒を取って h7 のマスに移動しチェックメイトとなった
+    f3+ - ポーンが f3 のマスに移動してチェックとなった
     
-    Simple enough so far. There are also a couple of extra symbols used to indicate certain things about a move. To indicate a capture, we place an 'x' symbol beween the piece and the square, for example:
+これまでご紹介した書き方だけだと、駒の動きを一つに絞れないことがあります。そんなときはどのマスにあった駒を動かしたか明示するために、移動先のマスの前に移動元の列 (file) を表すアルファベットを加えてあげます。
 
-        Rxf5 - Rook captures a piece on the f5 square.
-        Kxd2 - King captures a piece on the d2 square.
+例）
+    Rad1 - 元々 a 列にいたルークが d1 のマスに移動した
+    Nbxd2 - 元々 b 列にいたナイトが相手の駒を取って d2 のマスに移動した
+    Rfe1+ - 元々 f 列にいたルークが e1 のマスに移動してチェックとなった
+
+元々同じ列にいた場合は、元いた行 (rank) を表す数字を先ほどと同じ位置に明示してあげます。
+
+例）
+    R7e4 - 元々 7 行にいたルークが e4 のマスに移動した
+    N1xc3 - 元々 1 行にいたナイトが相手の駒を取って c3 のマスに移動した
+
+キャスリングはここまであげた場合とは全く異なる書き方で記録します。クイーンサイドにキャスリングしたときは O-O と、キングサイドにキャスリングしたときは O-O-O と記録します。
+
+記録者が感じたことをメモするときに下のような記号を使うこともあります。
+
+    ! - 妙手
+    !! - 非常に妙手
+    ? - 疑問な手
+    ?? - ひどい手
+    !? - 面白い手
+    ?! - 疑わしい手
     
-    When a pawn is capturing, we use the letter of the file it is moving from, then the x, then the square it is moving to. For example:
-
-        gxf6 - Pawn on the g-file captures a piece on the f6 square.
-        exd5 - Pawn on the e-file captures a piece on the d5 square.
-    
-    If the pawn is making an en passant capture, we record the square that the pawn finished on, not the square of the captured pawn. You can also add 'e.p.' after the move to indicate en passant if you want, but this isn't mandatory. For example:
-
-        exd6 - Pawn captures a pawn on d5 en passant. The pawn finishes its move on d6.
-        gxh6 e.p. - Pawn captures a pawn on h5 en passant. The pawn finishes its move on h6.
-    
-    To indicate that a move is check, just add a '+' symbol on the end. If it's a double check, you can add ++ if you like, but just one will do. If the it's a checkmate, use the '#' symbol instead. Here are some examples:
-
-        Ba3+ - Bishop moves to a3 and gives check.
-        Qxh7# - Queen captures a piece on h7 and checkmates the black king.
-        f3+ - Pawn moves to f3 and gives check.
-    
-    Sometimes, two different piece of the same type could move to the same square. To specify which piece is to move, add the letter of the file the piece is moving from. Here are some examples:
-
-        Rad1 - Rook on the a-file moves to d1.
-        Nbxd2 - Knight on the b-file captures a piece on d2.
-        Rfe1+ - Rook on the f-file moves to e1 and gives check.
-    
-    What about if both pieces are on the same file as well? In this case, put the number of the starting rank for the piece that is moving, instead of the file letter. Here are some examples:
-
-        R7e4 - Rook on the seventh rank moves to e4.
-        N1xc3 - Knight on the first rank captures a piece on c3.
-
-    Castling is recorded differently to the other moves. For kingside castling, record it as O-O and for queenside castling, record it as O-O-O.
-
-    When a game has been annotated, some symbols are used to indicate that a particular move is good or bad. We don't normally use these when recording a game in a tournament (it might be offputting to your opponent to see what you think of his moves). The symbols are as follows:
-
-        ! - Good move.
-        !! - Brilliant move.
-        ? - Poor move.
-        ?? - Terrible move.
-        !? - Interesting move.
-        ?! - Dubious move.
-
-    from www.chessstrategyonline.comcontent/tutorials/basic-chess-concepts-chess-notation
+参照：www.chessstrategyonline.comcontent/tutorials/basic-chess-concepts-chess-notation
 
     Did you get it?
     Read the whole passage and press enter to next
